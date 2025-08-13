@@ -1,0 +1,22 @@
+---
+import MenuGroup from './MenuGroup.astro';
+
+export interface Props {
+    className?: string;
+    [key: string]: any;
+}
+
+const { className, ...alpineProps } = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+// Component props to pass down to MenuGroup
+const groupProps = { className };
+---
+
+<template x-for={xFor} x-key={xKey || 'group.id'}>
+  <MenuGroup {...groupProps} {...restProps}>
+    <slot />
+  </MenuGroup>
+</template>

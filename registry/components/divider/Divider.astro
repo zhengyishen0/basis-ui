@@ -1,0 +1,57 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+  direction?: 'horizontal' | 'vertical';
+  color?: 'gray' | 'neutral' | 'slate';
+  thickness?: '1' | '2' | '4';
+  spacing?: '2' | '4' | '6' | '8';
+  class?: string;
+  [key: string]: any; // Alpine.js pass-through
+}
+
+const { 
+  direction = 'horizontal',
+  color = 'gray',
+  thickness = '1',
+  spacing = '4',
+  class: className = '',
+  ...rest
+} = Astro.props;
+
+const classes = cn(
+  // Base divider
+  'border-none',
+  
+  // Direction-specific styling
+  direction === 'horizontal' && [
+    'w-full',
+    thickness === '1' && 'h-px',
+    thickness === '2' && 'h-0.5',
+    thickness === '4' && 'h-1',
+    `my-${spacing}`,
+  ],
+  direction === 'vertical' && [
+    'h-full',
+    thickness === '1' && 'w-px',
+    thickness === '2' && 'w-0.5', 
+    thickness === '4' && 'w-1',
+    `mx-${spacing}`,
+    'inline-block align-top',
+  ],
+  
+  // Color variants
+  color === 'gray' && 'bg-gray-200',
+  color === 'neutral' && 'bg-neutral-200',
+  color === 'slate' && 'bg-slate-200',
+  
+  className
+);
+---
+
+<div 
+  class={classes} 
+  role="separator" 
+  aria-orientation={direction} 
+  {...rest}
+></div>

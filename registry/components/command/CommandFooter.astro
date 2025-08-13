@@ -1,0 +1,43 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+    class?: string;
+    showHints?: boolean;
+    [key: string]: any;
+}
+
+const { class: className, showHints = true, ...props } = Astro.props;
+
+const classes = cn(
+    'flex items-center justify-center px-3 py-2 text-xs text-muted-foreground border-t bg-muted/50',
+    className
+);
+
+const hintClasses = cn('flex items-center gap-4');
+
+const keyClasses = cn(
+    'inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium bg-background'
+);
+---
+
+{
+    showHints && (
+        <div class={classes} {...props} slot="footer">
+            <div class={hintClasses}>
+                <span class="flex items-center gap-1">
+                    <kbd class={keyClasses}>↵</kbd>
+                    <span>to select</span>
+                </span>
+                <span class="flex items-center gap-1">
+                    <kbd class={keyClasses}>↑↓</kbd>
+                    <span>to navigate</span>
+                </span>
+                <span class="flex items-center gap-1">
+                    <kbd class={keyClasses}>esc</kbd>
+                    <span>to close</span>
+                </span>
+            </div>
+        </div>
+    )
+}

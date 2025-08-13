@@ -1,0 +1,159 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import {
+    overflowVariants,
+    semanticVariants,
+    interactiveEffects,
+    shapes,
+    elevationOptions,
+} from '@/lib/component-variants';
+
+const cardVariants = cva(
+    'text-card-foreground flex flex-col transition-all duration-200 [&_.card-header]:relative [&_.card-content]:relative [&_.card-footer]:relative [&_.card-header>*:first-child]:relative [&_.card-header>*:first-child]:z-10 [&_.card-content>*:first-child]:relative [&_.card-content>*:first-child]:z-10 [&_.card-footer>*:first-child]:relative [&_.card-footer>*:first-child]:z-10 p-md',
+    {
+        variants: {
+            // Surface variants
+            variant: {
+                default: 'border border-border bg-background',
+                muted: 'border border-border bg-muted',
+                outline: 'border-2 border-border bg-transparent',
+                ghost: '',
+                gradient:
+                    'border border-border bg-gradient-to-br from-background to-muted',
+            },
+            // Shape variants
+            shape: shapes,
+            // Elevation variants
+            elevation: elevationOptions,
+            // Interactive states
+            interactive: {
+                static: '',
+                hover: 'cursor-default',
+                click: 'cursor-pointer',
+            },
+            // Effect presets
+            effect: {
+                lift: '',
+                scale: '',
+                glow: '',
+                subtle: '',
+                bounce: '',
+            },
+            overflow: overflowVariants,
+        },
+        compoundVariants: [
+            // Hover effects - lift
+            {
+                interactive: 'hover',
+                effect: 'lift',
+                class: 'hover:-translate-y-0.5 hover:shadow-md',
+            },
+            {
+                interactive: 'click',
+                effect: 'lift',
+                class: '[&.active]:translate-y-0 [&.active]:scale-[0.98] [&.active]:shadow-sm',
+            },
+            // Scale effects
+            {
+                interactive: 'hover',
+                effect: 'scale',
+                class: 'hover:scale-[1.02] hover:shadow-md',
+            },
+            {
+                interactive: 'click',
+                effect: 'scale',
+                class: '[&.active]:scale-[0.98] [&.active]:shadow-sm',
+            },
+            // Glow effects
+            {
+                interactive: 'hover',
+                effect: 'glow',
+                class: 'hover:shadow-lg hover:bg-opacity-80',
+            },
+            {
+                interactive: 'click',
+                effect: 'glow',
+                class: '[&.active]:shadow-lg [&.active]:bg-opacity-60',
+            },
+            // Subtle effects
+            {
+                interactive: 'hover',
+                effect: 'subtle',
+                class: 'hover:bg-opacity-80',
+            },
+            {
+                interactive: 'click',
+                effect: 'subtle',
+                class: '[&.active]:bg-opacity-60',
+            },
+            // Bounce effects
+            {
+                interactive: 'hover',
+                effect: 'bounce',
+                class: 'hover:-translate-y-0.5 hover:scale-[1.01]',
+            },
+            {
+                interactive: 'click',
+                effect: 'bounce',
+                class: '[&.active]:translate-y-0.5 [&.active]:scale-[0.99]',
+            },
+        ],
+    }
+);
+
+export interface Props extends VariantProps<typeof cardVariants> {
+    padding?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+    direction?: 'row' | 'column';
+    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+    align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+    class?: string;
+    // Custom sizing props
+    width?: string;
+    height?: string;
+    // Alpine.js pass-through
+    [key: string]: any;
+}
+
+const {
+    variant = 'default',
+    shape = 'rounded',
+    elevation = 'elevated',
+    interactive = 'static',
+    effect = 'lift',
+    size = 'fixed',
+    overflow = 'fixed',
+    padding = 'none',
+    direction = 'column',
+    justify = 'center',
+    align = 'stretch',
+    width,
+    height,
+    class: className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<div
+    class={cn(
+        cardVariants({
+            variant,
+            shape,
+            elevation,
+            interactive,
+            effect,
+            size: width || height ? undefined : size,
+            overflow,
+        }),
+        padding && `p-${padding}`,
+        direction === 'row' ? 'flex-row' : 'flex-col',
+        justify && `justify-${justify}`,
+        align && `items-${align}`,
+        className
+    )}
+    style={`${width ? `width: ${width};` : ''}${height ? `height: ${height};` : ''}`}
+    data-card-interactive={interactive}
+    {...alpineProps}
+>
+    <slot />
+</div>

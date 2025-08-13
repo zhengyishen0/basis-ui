@@ -1,0 +1,17 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+  class?: string;
+  [key: string]: any;
+}
+
+const { class: className, ...alpineProps } = Astro.props;
+---
+
+<thead 
+  class={cn("border-b border-border bg-muted/50", className)}
+  {...alpineProps}
+>
+  <slot />
+</thead>

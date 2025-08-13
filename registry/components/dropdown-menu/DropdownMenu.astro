@@ -1,0 +1,19 @@
+---
+import Popup from '../popup/Popup.astro';
+
+export interface Props {
+    trigger?: 'click' | 'hover' | 'focus' | 'manual';
+    className?: string;
+    [key: string]: any;
+}
+
+const {
+    trigger = 'click',
+    className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<Popup trigger={trigger} className={className} {...alpineProps}>
+    <slot />
+</Popup>

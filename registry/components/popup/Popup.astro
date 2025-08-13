@@ -1,0 +1,51 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+    trigger?: 'click' | 'hover' | 'focus' | 'rightclick' | 'manual';
+    dismiss?: 'auto' | 'manual';
+    delay?: number;
+    className?: string;
+    [key: string]: any;
+}
+
+const {
+    trigger = 'click',
+    dismiss = 'manual',
+    delay = 0,
+    className,
+    ...alpineProps
+} = Astro.props;
+
+const popupId = `popup-${Math.random().toString(36).substring(2, 11)}`;
+---
+
+<div
+    x-data=`{
+        open: false,
+        trigger: '${trigger}',
+        popupId: '${popupId}',
+        toggle() { this.open = !this.open },
+        close() { this.open = false }
+    }`
+    @click.outside="open && close()"
+    @keydown.escape.window="open && close()"
+    @mouseenter="trigger === 'hover' && (open = true)"
+    @mouseleave="trigger === 'hover' && (open = false)"
+    class={cn(
+        'relative inline-block popup-hover',
+        className
+    )}
+    data-trigger={trigger}
+    {...alpineProps}
+>
+    <slot />
+    
+    <style>
+        .popup-hover[data-trigger="hover"]:hover .popup-content {
+            display: block !important;
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+    </style>
+</div>

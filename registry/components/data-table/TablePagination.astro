@@ -1,0 +1,130 @@
+---
+import { cn } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  showInfo?: boolean;
+  showPageSize?: boolean;
+  pageSizeOptions?: number[];
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  showInfo = true,
+  showPageSize = true,
+  pageSizeOptions = [10, 25, 50, 100],
+  class: className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<div 
+  class={cn("flex items-center justify-between gap-4 p-4 bg-background border border-border rounded-lg", className)}
+  x-data={`{ pageSizeOptions: ${JSON.stringify(pageSizeOptions)} }`}
+  {...alpineProps}
+>
+  <!-- Left side - Info and page size selector -->
+  <div class="flex items-center gap-4">
+    {showInfo && (
+      <div class="text-sm text-muted-foreground">
+        <span x-text="`Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, filteredData.length)} of ${filteredData.length} entries`"></span>
+      </div>
+    )}
+    
+    {showPageSize && (
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-muted-foreground">Show:</span>
+        <select 
+          class="px-2 py-1 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          x-model="pageSize"
+          x-on:change="setPageSize(parseInt($event.target.value))"
+        >
+          <template x-for="size in pageSizeOptions" x-key="size">
+            <option x-bind:value="size" x-text="size"></option>
+          </template>
+        </select>
+        <span class="text-sm text-muted-foreground">entries</span>
+      </div>
+    )}
+  </div>
+
+  <!-- Right side - Pagination controls -->
+  <div class="flex items-center gap-2">
+    <!-- First page -->
+    <button
+      class="px-2 py-1 text-sm border border-input rounded-md bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      x-on:click="goToPage(1)"
+      x-bind:disabled="currentPage <= 1"
+      title="First page"
+    >
+      <Icon name="lucide:chevrons-left" class="h-4 w-4" />
+    </button>
+
+    <!-- Previous page -->
+    <button
+      class="px-3 py-1 text-sm border border-input rounded-md bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      x-on:click="previousPage()"
+      x-bind:disabled="currentPage <= 1"
+    >
+      Previous
+    </button>
+
+    <!-- Page numbers -->
+    <div class="flex items-center gap-1">
+      <!-- Show first page if not in range -->
+      <template x-if="currentPage > 3">
+        <div class="flex items-center gap-1">
+          <button
+            class="px-3 py-1 text-sm border border-input rounded-md bg-background hover:bg-accent transition-colors"
+            x-on:click="goToPage(1)"
+          >
+            1
+          </button>
+          <span class="px-2 text-sm text-muted-foreground">...</span>
+        </div>
+      </template>
+
+      <!-- Page range around current page -->
+      <template x-for="page in Array.from({length: Math.min(5, totalPages)}, (_, i) => Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i).filter(p => p <= totalPages)" x-key="page">
+        <button
+          class="px-3 py-1 text-sm border rounded-md transition-colors"
+          x-bind:class="page === currentPage ? 'bg-primary text-primary-foreground border-primary' : 'border-input bg-background hover:bg-accent'"
+          x-on:click="goToPage(page)"
+          x-text="page"
+        ></button>
+      </template>
+
+      <!-- Show last page if not in range -->
+      <template x-if="currentPage < totalPages - 2">
+        <div class="flex items-center gap-1">
+          <span class="px-2 text-sm text-muted-foreground">...</span>
+          <button
+            class="px-3 py-1 text-sm border border-input rounded-md bg-background hover:bg-accent transition-colors"
+            x-on:click="goToPage(totalPages)"
+            x-text="totalPages"
+          ></button>
+        </div>
+      </template>
+    </div>
+
+    <!-- Next page -->
+    <button
+      class="px-3 py-1 text-sm border border-input rounded-md bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      x-on:click="nextPage()"
+      x-bind:disabled="currentPage >= totalPages"
+    >
+      Next
+    </button>
+
+    <!-- Last page -->
+    <button
+      class="px-2 py-1 text-sm border border-input rounded-md bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      x-on:click="goToPage(totalPages)"
+      x-bind:disabled="currentPage >= totalPages"
+      title="Last page"
+    >
+      <Icon name="lucide:chevrons-right" class="h-4 w-4" />
+    </button>
+  </div>
+</div>

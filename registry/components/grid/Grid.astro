@@ -1,0 +1,41 @@
+---
+import { cn } from '@/lib/utils';
+import { cva } from 'class-variance-authority';
+import { overflowVariants } from '@/lib/component-variants';
+
+const gridVariants = cva('grid', {
+    variants: {
+        columns: {
+            auto: 'grid-cols-[repeat(auto-fit,minmax(280px,1fr))]',
+            1: 'grid-cols-1',
+            2: 'grid-cols-1 md:grid-cols-2',
+            3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+            4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
+            5: 'grid-cols-1 md:grid-cols-3 lg:grid-cols-5',
+            6: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6',
+            12: 'grid-cols-4 md:grid-cols-8 lg:grid-cols-12',
+        },
+        overflow: overflowVariants,
+    },
+});
+
+export interface Props {
+    columns?: 'auto' | 1 | 2 | 3 | 4 | 5 | 6 | 12;
+    overflow?: 'auto' | 'fixed' | 'expand' | 'wrap' | 'show';
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    columns = 'auto',
+    overflow = 'auto',
+    class: className = '',
+    ...alpineProps
+} = Astro.props;
+
+const classes = cn(gridVariants({ columns, overflow }), className);
+---
+
+<div class={classes} {...alpineProps}>
+    <slot />
+</div>

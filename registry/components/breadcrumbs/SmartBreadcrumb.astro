@@ -1,0 +1,171 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { sizes, overflowVariants } from '@/lib/component-variants';
+import { BreadcrumbItem, BreadcrumbEllipsis } from './';
+import { Icon } from 'astro-icon/components';
+
+const breadcrumbVariants = cva('w-full', {
+    variants: {
+        variant: {
+            default: '',
+            minimal: 'text-sm',
+            compact: 'text-xs',
+        },
+        size: sizes,
+        overflow: overflowVariants
+    }
+});
+
+export interface Props extends VariantProps<typeof breadcrumbVariants> {
+    variant?: 'default' | 'minimal' | 'compact';
+    'aria-label'?: string;
+    maxItems?: number;
+    separator?: 'chevron' | 'slash' | 'dot' | 'arrow';
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    variant = 'default',
+    size = 'md',
+    overflow = 'fixed',
+    'aria-label': ariaLabel = 'breadcrumb',
+    maxItems = 5,
+    separator = 'chevron',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+
+// Extract x-data from alpineProps to understand the data structure
+const { 'x-data': xData, ...restAlpineProps } = alpineProps;
+---
+
+<nav
+    aria-label={ariaLabel}
+    class={cn(
+        breadcrumbVariants({
+            variant,
+            size,
+            overflow,
+        }),
+        className
+    )}
+    x-data={`{ 
+    ${xData ? xData.replace(/^\{/, '').replace(/\}$/, '') + ',' : 'items: [],'}
+    showDropdown: false,
+    get processed() {
+      if (!this.items || this.items.length <= ${maxItems}) {
+        return { 
+          displayItems: this.items || [], 
+          hidden: [], 
+          shouldShowEllipsis: false 
+        };
+      }
+      
+      const first = this.items[0];
+      const secondToLast = this.items[this.items.length - 2];
+      const last = this.items[this.items.length - 1];
+      const hidden = this.items.slice(1, this.items.length - 2);
+      
+      return {
+        displayItems: [
+          first,
+          { type: 'ellipsis' },
+          secondToLast,
+          last
+        ],
+        hidden: hidden,
+        shouldShowEllipsis: true
+      };
+    }
+  }`}
+    {...restAlpineProps}
+>
+    <ol class="flex items-center space-x-1 text-sm text-muted-foreground">
+        <!-- Handle case when items are provided via x-data -->
+        <template x-if="typeof items !== 'undefined'">
+            <div class="contents">
+                <!-- Render all visible items with proper separators -->
+                <template
+                    x-for="(item, index) in processed.displayItems"
+                    x-key="index"
+                >
+                    <div class="contents">
+                        <!-- Regular breadcrumb item -->
+                        <template x-if="item.type !== 'ellipsis'">
+                            <div class="contents">
+                                <BreadcrumbItem
+                                    x-bind:href="item.href"
+                                    x-text="item.label"
+                                />
+
+                                <!-- Separator after regular item (except last) -->
+                                <template
+                                    x-if="index < processed.displayItems.length - 1"
+                                >
+                                    <span
+                                        class="mx-2 text-muted-foreground flex items-center"
+                                    >
+                                        <Icon name="lucide:chevron-right" class="w-4 h-4" />
+                                    </span>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Ellipsis item with dropdown -->
+                        <template x-if="item.type === 'ellipsis'">
+                            <div class="contents">
+                                <li class="flex items-center">
+                                    <div class="relative">
+                                        <BreadcrumbEllipsis
+                                            @click="showDropdown = !showDropdown"
+                                        />
+
+                                        <!-- Dropdown menu -->
+                                        <div
+                                            x-show="showDropdown"
+                                            x-transition
+                                            @click.away="showDropdown = false"
+                                            class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[200px]"
+                                        >
+                                            <template
+                                                x-for="(hiddenItem, hiddenIndex) in processed.hidden"
+                                                x-key="hiddenIndex"
+                                            >
+                                                <a
+                                                    x-bind:href="hiddenItem.href"
+                                                    x-text="hiddenItem.label"
+                                                    class="block px-3 py-2 text-sm hover:bg-gray-100 no-underline"
+                                                    @click="showDropdown = false"
+                                                ></a>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <!-- Separator after ellipsis (except last) -->
+                                <template
+                                    x-if="index < processed.displayItems.length - 1"
+                                >
+                                    <span
+                                        class="mx-2 text-muted-foreground flex items-center"
+                                    >
+                                        <Icon name="lucide:chevron-right" class="w-4 h-4" />
+                                    </span>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Fallback: regular slot content when no items data is provided -->
+        <template x-if="typeof items === 'undefined'">
+            <div class="contents">
+                <slot />
+            </div>
+        </template>
+    </ol>
+</nav>

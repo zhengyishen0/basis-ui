@@ -1,0 +1,29 @@
+---
+import CommandItem from './CommandItem.astro';
+
+export interface Props {
+  variant?: 'command';
+  className?: string;
+  [key: string]: any;
+}
+
+const {
+  variant = 'command',
+  className,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+// Component props to pass down to CommandItem
+const itemProps = { className };
+---
+
+<template x-for={xFor} x-key={xKey || 'item.id'}>
+  <CommandItem {...itemProps} {...restProps}>
+    <slot name="icon" slot="icon" />
+    <slot />
+    <slot name="shortcut" slot="shortcut" />
+  </CommandItem>
+</template>

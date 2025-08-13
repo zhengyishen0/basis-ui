@@ -1,0 +1,96 @@
+---
+import Dialog from '../dialog/Dialog.astro';
+import DialogContent from '../dialog/DialogContent.astro';
+import MenuContainer from '../menu/MenuContainer.astro';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const commandVariants = cva(
+  'flex w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground',
+  {
+    variants: {
+      variant: {
+        default: 'border border-border shadow-md',
+        ghost: 'border-0 shadow-none',
+        dialog: 'border-0 shadow-lg'
+      },
+      size: {
+        sm: 'h-60',
+        md: 'h-80', 
+        lg: 'h-96',
+        full: 'h-full'
+      }
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'md'
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof commandVariants> {
+  items?: Record<string, Array<{
+    title: string;
+    value: string;
+    icon?: string; // Icon name (e.g., 'calendar') or SVG string
+    shortcut?: string;
+    show?: boolean;
+    disabled?: boolean;
+  }>>;
+  placeholder?: string;
+  emptyText?: string;
+  onSelect?: string;
+  trigger?: 'click' | 'hover' | 'focus' | 'rightclick' | 'manual';
+  keyboardShortcut?: string;
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  items = {},
+  placeholder = 'Type a command or search...',
+  emptyText = 'No results found.',
+  onSelect = 'console.log(item)',
+  trigger = 'manual',
+  keyboardShortcut = 'cmd+k',
+  variant,
+  size,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+
+---
+
+<Dialog 
+  keyboardShortcut={keyboardShortcut}
+  autoFocus={true}
+  focusSelector="input"
+  class={className}
+  {...alpineProps}
+>
+  <!-- Trigger slot for button/trigger element -->
+  <slot name="trigger" />
+  
+  <!-- Command dialog content -->
+  <DialogContent 
+    variant="center"
+    size="lg"
+    class="p-0"
+  >
+    <MenuContainer
+      items={items}
+      searchEnabled={true}
+      keyboardNav={true}
+      searchModel="commandSearch"
+      activeModel="commandActiveIndex"
+      itemsModel="commandItems"
+      emptyText={emptyText}
+      onSelect={`${onSelect}; close()`}
+      variant={variant}
+      size={size}
+    >
+      <slot name="input" slot="input" />
+      <slot />
+      <slot name="footer" slot="footer" />
+    </MenuContainer>
+  </DialogContent>
+</Dialog>

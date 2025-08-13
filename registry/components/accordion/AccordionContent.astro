@@ -1,0 +1,41 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { semanticVariants, sizes, overflowVariants } from '@/lib/component-variants';
+import Text from '@/components/ui/display/Text.astro';
+
+const accordionContentVariants = cva('px-4 pb-4 pt-2', {
+    variants: {
+        variant: {
+            default: '',
+            emphasized: 'font-medium',
+        },
+        overflow: overflowVariants
+    }
+});
+
+export interface Props extends VariantProps<typeof accordionContentVariants> {
+    text?: string;
+    variant?: 'default' | 'emphasized';
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    variant = 'default',
+    overflow = 'fixed',
+    text,
+    class: className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<div x-show="activeAccordion==id" x-collapse x-cloak {...alpineProps}>
+    <div
+        class={cn(accordionContentVariants({ variant, overflow }), className)}
+    >
+        <Text variant={variant === 'emphasized' ? 'body' : 'accordion-content'}>
+            {text ? <span x-text={text} /> : <slot />}
+        </Text>
+    </div>
+</div>

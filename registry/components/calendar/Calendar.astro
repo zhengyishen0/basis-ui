@@ -1,0 +1,656 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+
+const calendarVariants = cva(
+    'inline-block bg-background text-foreground border border-border rounded-lg shadow-sm w-fit',
+    {
+        variants: {
+            variant: {
+                default: 'bg-background border-border',
+                outline: 'bg-transparent border-2 border-border',
+                minimal: 'bg-transparent border-0 shadow-none',
+            },
+            size: {
+                sm: 'text-xs [&_.calendar-day]:h-7 [&_.calendar-day]:w-7 [&_.calendar-weekday]:h-6 [&_.calendar-weekday]:text-xs',
+                md: 'text-sm [&_.calendar-day]:h-9 [&_.calendar-day]:w-9 [&_.calendar-weekday]:h-8 [&_.calendar-weekday]:text-sm',
+                lg: 'text-base [&_.calendar-day]:h-11 [&_.calendar-day]:w-11 [&_.calendar-weekday]:h-10 [&_.calendar-weekday]:text-base',
+            },
+            density: {
+                compact:
+                    '[&_.calendar-header]:p-2 [&_.calendar-body]:p-2 [&_.calendar-grid]:gap-0.5',
+                normal: '[&_.calendar-header]:p-3 [&_.calendar-body]:p-3 [&_.calendar-grid]:gap-1',
+                comfortable:
+                    '[&_.calendar-header]:p-4 [&_.calendar-body]:p-4 [&_.calendar-grid]:gap-2',
+            },
+        },
+        defaultVariants: {
+            variant: 'default',
+            size: 'md',
+            density: 'normal',
+        },
+    }
+);
+
+// Calculate width based on numberOfMonths and size
+const getCalendarWidth = (size: string, numberOfMonths: number) => {
+    const baseWidths = {
+        sm: 280, // Base width for small calendar
+        md: 320, // Base width for medium calendar  
+        lg: 360  // Base width for large calendar
+    };
+    
+    const baseWidth = baseWidths[size as keyof typeof baseWidths] || baseWidths.md;
+    const gap = 24; // 1.5rem gap between months in pixels
+    
+    if (numberOfMonths === 1) {
+        return `${baseWidth}px`;
+    }
+    
+    // For multiple months: base width * number + gaps between months
+    const totalWidth = (baseWidth * numberOfMonths) + (gap * (numberOfMonths - 1));
+    return `${totalWidth}px`;
+};
+
+export interface Props extends VariantProps<typeof calendarVariants> {
+    // Selection behavior
+    mode?: 'single' | 'range' | 'multiple';
+    selected?: Date | Date[] | { from: Date; to: Date };
+    onSelect?: string; // Alpine.js function name
+    defaultSelected?: Date | Date[] | { from: Date; to: Date };
+
+    // Date constraints
+    disabled?: string; // Alpine.js function name that returns boolean
+    minDate?: Date;
+    maxDate?: Date;
+    fromYear?: number;
+    toYear?: number;
+
+    // Display options
+    numberOfMonths?: number;
+    showOutsideDays?: boolean;
+    showWeekNumbers?: boolean;
+    fixedWeeks?: boolean;
+
+    // Navigation
+    captionLayout?: 'buttons' | 'dropdown';
+    disableNavigation?: boolean;
+
+    // Localization
+    weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+    // Advanced modifiers
+    modifiers?: Record<string, string>; // Alpine.js expressions
+
+    // Behavior
+    autoFocus?: boolean;
+    defaultMonth?: Date;
+
+    // Standard props
+    className?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    mode = 'single',
+    selected,
+    onSelect = 'handleDateSelect',
+    defaultSelected,
+    disabled,
+    minDate,
+    maxDate,
+    fromYear = new Date().getFullYear() - 10,
+    toYear = new Date().getFullYear() + 10,
+    numberOfMonths = 1,
+    showOutsideDays = true,
+    showWeekNumbers = false,
+    fixedWeeks = false,
+    captionLayout = 'buttons',
+    disableNavigation = false,
+    weekStartsOn = 0,
+    modifiers = {},
+    autoFocus = false,
+    defaultMonth = new Date(),
+    variant,
+    size,
+    density,
+    className,
+    ...alpineProps
+} = Astro.props;
+
+// Generate Alpine.js data object
+const today = new Date();
+const defaultMonthValue = defaultMonth || today;
+
+// Month names and day names
+const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+];
+
+const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const adjustedDayNames = [
+    ...dayNames.slice(weekStartsOn),
+    ...dayNames.slice(0, weekStartsOn),
+];
+---
+
+<div
+    x-data={`{
+    mode: '${mode}',
+    selected: ${selected ? JSON.stringify(selected) : 'null'},
+    currentMonth: ${defaultMonthValue.getMonth()},
+    currentYear: ${defaultMonthValue.getFullYear()},
+    monthNames: ${JSON.stringify(monthNames)},
+    dayNames: ${JSON.stringify(adjustedDayNames)},
+    weekStartsOn: ${weekStartsOn},
+    showOutsideDays: ${showOutsideDays},
+    numberOfMonths: ${numberOfMonths},
+    captionLayout: '${captionLayout}',
+    disableNavigation: ${disableNavigation},
+    autoFocus: ${autoFocus},
+    minDate: ${minDate ? `new Date('${minDate.toISOString()}')` : 'null'},
+    maxDate: ${maxDate ? `new Date('${maxDate.toISOString()}')` : 'null'},
+    fromYear: ${fromYear},
+    toYear: ${toYear},
+    
+    // Calendar grid data
+    calendarDays: [],
+    blankDays: [],
+    months: [],
+    
+    // Initialize calendar
+    init() {
+      this.generateCalendar();
+      if (this.autoFocus) {
+        this.$nextTick(() => {
+          this.$el.querySelector('.calendar-day[tabindex="0"]')?.focus();
+        });
+      }
+    },
+    
+    // Generate calendar days for single or multiple months
+    generateCalendar() {
+      this.months = [];
+      
+      for (let monthOffset = 0; monthOffset < this.numberOfMonths; monthOffset++) {
+        const monthDate = new Date(this.currentYear, this.currentMonth + monthOffset, 1);
+        const year = monthDate.getFullYear();
+        const month = monthDate.getMonth();
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        
+        // Calculate blank days at start
+        let startDay = firstDay.getDay() - this.weekStartsOn;
+        if (startDay < 0) startDay += 7;
+        
+        const blankDays = Array.from({ length: startDay }, (_, i) => {
+          const date = new Date(year, month, -(startDay - i - 1));
+          return {
+            date,
+            day: date.getDate(),
+            isOutside: true,
+            isPrevMonth: true
+          };
+        });
+        
+        // Generate days for current month
+        const monthDays = Array.from({ length: daysInMonth }, (_, i) => {
+          const date = new Date(year, month, i + 1);
+          return {
+            date,
+            day: i + 1,
+            isOutside: false,
+            isToday: this.isToday(date),
+            isSelected: this.isSelected(date),
+            isDisabled: this.isDisabled(date)
+          };
+        });
+        
+        // Add next month days if showOutsideDays
+        const allDays = [...blankDays, ...monthDays];
+        if (this.showOutsideDays) {
+          const totalCells = allDays.length;
+          const remainingCells = 42 - totalCells; // 6 weeks * 7 days
+          
+          for (let i = 1; i <= remainingCells; i++) {
+            const date = new Date(year, month + 1, i);
+            allDays.push({
+              date,
+              day: i,
+              isOutside: true,
+              isNextMonth: true
+            });
+          }
+        }
+        
+        this.months.push({
+          year,
+          month,
+          monthName: this.monthNames[month],
+          blankDays,
+          monthDays,
+          allDays
+        });
+      }
+      
+      // Keep backwards compatibility
+      if (this.months.length > 0) {
+        this.blankDays = this.months[0].blankDays;
+        this.calendarDays = this.months[0].allDays;
+      }
+    },
+    
+    // Navigation methods
+    previousMonth() {
+      if (this.disableNavigation) return;
+      if (this.currentMonth === 0) {
+        this.currentMonth = 11;
+        this.currentYear--;
+      } else {
+        this.currentMonth--;
+      }
+      this.generateCalendar();
+    },
+    
+    nextMonth() {
+      if (this.disableNavigation) return;
+      if (this.currentMonth === 11) {
+        this.currentMonth = 0;
+        this.currentYear++;
+      } else {
+        this.currentMonth++;
+      }
+      this.generateCalendar();
+    },
+    
+    // Date checking methods
+    isToday(date) {
+      const today = new Date();
+      return date.toDateString() === today.toDateString();
+    },
+    
+    isSelected(date) {
+      if (!this.selected) return false;
+      
+      if (this.mode === 'single') {
+        return this.selected && new Date(this.selected).toDateString() === date.toDateString();
+      } else if (this.mode === 'multiple') {
+        return Array.isArray(this.selected) && 
+               this.selected.some(d => new Date(d).toDateString() === date.toDateString());
+      } else if (this.mode === 'range') {
+        if (!this.selected || !this.selected.from) return false;
+        const from = new Date(this.selected.from);
+        const to = this.selected.to ? new Date(this.selected.to) : null;
+        
+        if (!to) return date.toDateString() === from.toDateString();
+        return date >= from && date <= to;
+      }
+      return false;
+    },
+    
+    isRangeStart(date) {
+      if (this.mode !== 'range' || !this.selected || !this.selected.from) return false;
+      const from = new Date(this.selected.from);
+      return date.toDateString() === from.toDateString();
+    },
+    
+    isRangeEnd(date) {
+      if (this.mode !== 'range' || !this.selected || !this.selected.to) return false;
+      const to = new Date(this.selected.to);
+      return date.toDateString() === to.toDateString();
+    },
+    
+    isInRange(date) {
+      if (this.mode !== 'range' || !this.selected || !this.selected.from) return false;
+      const from = new Date(this.selected.from);
+      const to = this.selected.to ? new Date(this.selected.to) : null;
+      
+      if (!to) return false;
+      return date > from && date < to;
+    },
+    
+    isDisabled(date) {
+      // Check min/max dates
+      if (this.minDate && date < this.minDate) return true;
+      if (this.maxDate && date > this.maxDate) return true;
+      
+      // Check custom disabled function
+      if (typeof window !== 'undefined' && window.${disabled || 'null'}) {
+        return window.${disabled}(date);
+      }
+      
+      return false;
+    },
+    
+    // Date selection handler
+    selectDate(date) {
+      if (this.isDisabled(date)) return;
+      
+      if (this.mode === 'single') {
+        this.selected = date;
+      } else if (this.mode === 'multiple') {
+        if (!Array.isArray(this.selected)) this.selected = [];
+        const index = this.selected.findIndex(d => 
+          new Date(d).toDateString() === date.toDateString()
+        );
+        if (index >= 0) {
+          this.selected.splice(index, 1);
+        } else {
+          this.selected.push(date);
+        }
+      } else if (this.mode === 'range') {
+        if (!this.selected || !this.selected.from || (this.selected.from && this.selected.to)) {
+          this.selected = { from: date, to: null };
+        } else {
+          if (date >= new Date(this.selected.from)) {
+            this.selected.to = date;
+          } else {
+            this.selected = { from: date, to: this.selected.from };
+          }
+        }
+      }
+      
+      this.generateCalendar();
+      
+      // Dispatch event to parent component
+      this.$dispatch('date-selected', { date: this.selected, mode: this.mode });
+      
+      // Also call global handler if available
+      if (typeof window !== 'undefined' && window.${onSelect} && typeof window.${onSelect} === 'function') {
+        window.${onSelect}(this.selected);
+      }
+    },
+    
+    // Keyboard navigation
+    handleKeydown(event, date) {
+      const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', ' '];
+      if (!keys.includes(event.key)) return;
+      
+      event.preventDefault();
+      
+      if (event.key === 'Enter' || event.key === ' ') {
+        this.selectDate(date);
+        return;
+      }
+      
+      // Arrow key navigation logic would go here
+      // For brevity, implementing basic navigation
+    }
+  }`}
+    x-init="init()"
+    class={cn(calendarVariants({ variant, size, density }), className)}
+    style={`width: ${getCalendarWidth(size || 'md', numberOfMonths)};`}
+    role="application"
+    aria-label="Calendar"
+    {...alpineProps}
+>
+    <!-- Calendar Header (only for single month) -->
+    <template x-if="numberOfMonths === 1">
+        <div class="calendar-header flex items-center justify-between mb-4">
+            <template x-if="!disableNavigation">
+                <button
+                    @click="previousMonth()"
+                    type="button"
+                    class="p-1 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors disabled:opacity-50"
+                    aria-label="Previous month"
+                >
+                    <Icon name="lucide:chevron-left" class="h-4 w-4" />
+                </button>
+            </template>
+
+            <div class="font-semibold text-center flex-1">
+                <template x-if="captionLayout === 'buttons'">
+                    <span x-text="`${monthNames[currentMonth]} ${currentYear}`"></span>
+                </template>
+
+                <template x-if="captionLayout === 'dropdown'">
+                    <div class="flex items-center gap-2 justify-center">
+                        <select
+                            x-model="currentMonth"
+                            @change="generateCalendar()"
+                            class="text-sm border border-border rounded px-2 py-1 bg-background"
+                        >
+                            <template x-for="(month, index) in monthNames" :key="index">
+                                <option :value="index" x-text="month"></option>
+                            </template>
+                        </select>
+                        <select
+                            x-model="currentYear"
+                            @change="generateCalendar()"
+                            class="text-sm border border-border rounded px-2 py-1 bg-background"
+                        >
+                            <template x-for="year in Array.from({length: toYear - fromYear + 1}, (_, i) => fromYear + i)" :key="year">
+                                <option :value="year" x-text="year"></option>
+                            </template>
+                        </select>
+                    </div>
+                </template>
+            </div>
+
+            <template x-if="!disableNavigation">
+                <button
+                    @click="nextMonth()"
+                    type="button"
+                    class="p-1 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors disabled:opacity-50"
+                    aria-label="Next month"
+                >
+                    <Icon name="lucide:chevron-right" class="h-4 w-4" />
+                </button>
+            </template>
+        </div>
+    </template>
+
+    <!-- Calendar Body -->
+    <div class="calendar-body">
+        <!-- Single Month View -->
+        <template x-if="numberOfMonths === 1">
+            <div class="single-month">
+                <!-- Weekday Headers -->
+                <div class="grid grid-cols-7 mb-2 w-full">
+                    <template x-for="day in dayNames" :key="day">
+                        <div class="calendar-weekday flex items-center justify-center font-medium text-muted-foreground">
+                            <span x-text="day"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="calendar-grid grid grid-cols-7 w-full">
+                    <!-- Blank days for previous month -->
+                    <template x-for="blank in blankDays" :key="`blank-${blank.day}`">
+                        <div x-show="showOutsideDays">
+                            <button
+                                @click="selectDate(blank.date)"
+                                @keydown="handleKeydown($event, blank.date)"
+                                type="button"
+                                class="calendar-day flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 transition-colors"
+                                :class="{
+                                    'bg-primary text-primary-foreground hover:bg-primary/90': isSelected(blank.date),
+                                    'bg-muted text-foreground': isInRange(blank.date),
+                                    'opacity-50 cursor-not-allowed': isDisabled(blank.date)
+                                }"
+                                :disabled="isDisabled(blank.date)"
+                                :tabindex="isDisabled(blank.date) ? -1 : 0"
+                            >
+                                <span x-text="blank.day"></span>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Current month days -->
+                    <template x-for="day in calendarDays.filter(d => !d.isOutside)" :key="`day-${day.day}`">
+                        <button
+                            @click="selectDate(day.date)"
+                            @keydown="handleKeydown($event, day.date)"
+                            type="button"
+                            class="calendar-day flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                            :class="{
+                                'bg-primary text-primary-foreground hover:bg-primary/90': isSelected(day.date),
+                                'bg-muted text-foreground': isInRange(day.date),
+                                'bg-accent text-accent-foreground': isToday(day.date) && !isSelected(day.date),
+                                'opacity-50 cursor-not-allowed': day.isDisabled,
+                                'font-semibold': isToday(day.date)
+                            }"
+                            :disabled="day.isDisabled"
+                            :tabindex="day.isDisabled ? -1 : 0"
+                            :aria-selected="isSelected(day.date)"
+                            :aria-current="isToday(day.date) ? 'date' : undefined"
+                        >
+                            <span x-text="day.day"></span>
+                        </button>
+                    </template>
+
+                    <!-- Next month days -->
+                    <template x-for="nextDay in calendarDays.filter(d => d.isNextMonth)" :key="`next-${nextDay.day}`">
+                        <div x-show="showOutsideDays">
+                            <button
+                                @click="selectDate(nextDay.date)"
+                                @keydown="handleKeydown($event, nextDay.date)"
+                                type="button"
+                                class="calendar-day flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 transition-colors"
+                                :class="{
+                                    'bg-primary text-primary-foreground hover:bg-primary/90': isSelected(nextDay.date),
+                                    'bg-muted text-foreground': isInRange(nextDay.date),
+                                    'opacity-50 cursor-not-allowed': isDisabled(nextDay.date)
+                                }"
+                                :disabled="isDisabled(nextDay.date)"
+                                :tabindex="isDisabled(nextDay.date) ? -1 : 0"
+                            >
+                                <span x-text="nextDay.day"></span>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
+        <!-- Multi-Month View -->
+        <template x-if="numberOfMonths > 1">
+            <div class="grid gap-6 grid-flow-col auto-cols-fr">
+                <template x-for="(monthData, monthIndex) in months" :key="`month-${monthIndex}`">
+                <div class="month-container">
+                    <!-- Month Header with Navigation for Each Month -->
+                    <div class="month-header flex items-center justify-between mb-3">
+                        <template x-if="!disableNavigation && monthIndex === 0">
+                            <button
+                                @click="previousMonth()"
+                                type="button"
+                                class="p-1 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors disabled:opacity-50"
+                                aria-label="Previous month"
+                            >
+                                <Icon name="lucide:chevron-left" class="h-4 w-4" />
+                            </button>
+                        </template>
+                        <template x-if="!(!disableNavigation && monthIndex === 0)">
+                            <div class="w-8"></div>
+                        </template>
+
+                        <div class="font-semibold text-center flex-1">
+                            <span x-text="`${monthData.monthName} ${monthData.year}`"></span>
+                        </div>
+
+                        <template x-if="!disableNavigation && monthIndex === numberOfMonths - 1">
+                            <button
+                                @click="nextMonth()"
+                                type="button"
+                                class="p-1 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors disabled:opacity-50"
+                                aria-label="Next month"
+                            >
+                                <Icon name="lucide:chevron-right" class="h-4 w-4" />
+                            </button>
+                        </template>
+                        <template x-if="!(!disableNavigation && monthIndex === numberOfMonths - 1)">
+                            <div class="w-8"></div>
+                        </template>
+                    </div>
+
+                    <!-- Weekday Headers -->
+                    <div class="grid grid-cols-7 mb-2 w-full">
+                        <template x-for="day in dayNames" :key="`${monthIndex}-${day}`">
+                            <div class="calendar-weekday flex items-center justify-center font-medium text-muted-foreground">
+                                <span x-text="day"></span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Month Grid -->
+                    <div class="calendar-grid grid grid-cols-7 w-full">
+                        <!-- Blank days -->
+                        <template x-for="blank in monthData.blankDays" :key="`${monthIndex}-blank-${blank.day}`">
+                            <div x-show="showOutsideDays">
+                                <button
+                                    @click="selectDate(blank.date)"
+                                    type="button"
+                                    class="calendar-day flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 transition-colors"
+                                    :class="{
+                                        'bg-primary text-primary-foreground hover:bg-primary/90': isSelected(blank.date),
+                                        'bg-muted text-foreground': isInRange(blank.date),
+                                        'opacity-50 cursor-not-allowed': isDisabled(blank.date)
+                                    }"
+                                    :disabled="isDisabled(blank.date)"
+                                >
+                                    <span x-text="blank.day"></span>
+                                </button>
+                            </div>
+                        </template>
+
+                        <!-- Month days -->
+                        <template x-for="day in monthData.monthDays" :key="`${monthIndex}-day-${day.day}`">
+                            <button
+                                @click="selectDate(day.date)"
+                                type="button"
+                                class="calendar-day flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                                :class="{
+                                    'bg-primary text-primary-foreground hover:bg-primary/90': isSelected(day.date),
+                                    'bg-muted text-foreground': isInRange(day.date),
+                                    'bg-accent text-accent-foreground': isToday(day.date) && !isSelected(day.date),
+                                    'opacity-50 cursor-not-allowed': day.isDisabled,
+                                    'font-semibold': isToday(day.date)
+                                }"
+                                :disabled="day.isDisabled"
+                                :aria-selected="isSelected(day.date)"
+                                :aria-current="isToday(day.date) ? 'date' : undefined"
+                            >
+                                <span x-text="day.day"></span>
+                            </button>
+                        </template>
+
+                        <!-- Next month filler days -->
+                        <template x-for="nextDay in monthData.allDays.filter(d => d.isNextMonth)" :key="`${monthIndex}-next-${nextDay.day}`">
+                            <div x-show="showOutsideDays">
+                                <button
+                                    @click="selectDate(nextDay.date)"
+                                    type="button"
+                                    class="calendar-day flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 transition-colors"
+                                    :class="{
+                                        'bg-primary text-primary-foreground hover:bg-primary/90': isSelected(nextDay.date),
+                                        'bg-muted text-foreground': isInRange(nextDay.date),
+                                        'opacity-50 cursor-not-allowed': isDisabled(nextDay.date)
+                                    }"
+                                    :disabled="isDisabled(nextDay.date)"
+                                >
+                                    <span x-text="nextDay.day"></span>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</div>

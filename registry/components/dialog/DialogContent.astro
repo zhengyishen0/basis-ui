@@ -1,0 +1,90 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const contentVariants = cva(
+    'relative bg-background text-foreground shadow-lg outline-none transition-all',
+    {
+        variants: {
+            // Custom variant mapping to overlay positioning
+            variant: {
+                center: 'rounded-lg border mx-4 my-8',
+                left: 'h-full max-w-sm border-r',
+                right: 'h-full max-w-sm border-l',
+                top: 'w-full max-h-[80vh] rounded-b-lg border-b border-x mx-4',
+                bottom: 'w-full max-h-[80vh] rounded-t-lg border-t',
+                fullscreen: 'w-full h-full',
+                positioned: 'absolute',
+            },
+        },
+        defaultVariants: {
+            variant: 'center',
+        },
+    }
+);
+
+export interface Props extends VariantProps<typeof contentVariants> {
+    className?: string;
+    backdrop?: 'dark' | 'light' | 'blur' | 'none';
+    theme?: string;
+    [key: string]: any;
+}
+
+const {
+    variant = 'center',
+    backdrop = 'dark',
+    theme = 'default',
+    className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<template x-teleport="body">
+    <div
+        x-show="open"
+        class={cn(
+            'fixed inset-0 z-modal flex focus:outline-none',
+            variant === 'center' && 'items-center justify-center',
+            variant === 'left' && 'items-center justify-start',
+            variant === 'right' && 'items-center justify-end',
+            variant === 'top' && 'items-start justify-center',
+            variant === 'bottom' && 'items-end justify-center',
+            variant === 'fullscreen' && 'items-stretch justify-stretch'
+        )}
+        style="display: none;"
+    >
+        <!-- Backdrop -->
+        <div
+            @click="closeable && close()"
+            x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="absolute inset-0 bg-black/50"
+        >
+        </div>
+
+        <!-- Content -->
+        <div
+            x-show="open"
+            x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            :id="dialogId"
+            class={cn(
+                contentVariants({ variant }),
+                className
+            )}
+            role="dialog"
+            aria-modal="true"
+            {...alpineProps}
+        >
+            <slot />
+        </div>
+    </div>
+</template>

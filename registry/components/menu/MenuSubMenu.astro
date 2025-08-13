@@ -1,0 +1,101 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+    className?: string;
+    [key: string]: any;
+}
+
+const { className, ...alpineProps } = Astro.props;
+
+const submenuId = `submenu-${Math.random().toString(36).substring(2, 11)}`;
+
+// Extract submenu items if passed as props
+const { submenuItems, ...restAlpineProps } = alpineProps;
+---
+
+<div
+    x-data=`{
+        submenuOpen: false,
+        submenuId: '${submenuId}',
+        submenuPosition: { x: 0, y: 0 },
+        submenuItems: ${submenuItems ? JSON.stringify(submenuItems) : '[]'},
+        
+        openSubmenu() {
+            this.submenuOpen = true;
+            this.$nextTick(() => {
+                this.positionSubmenu();
+            });
+        },
+        
+        closeSubmenu() {
+            this.submenuOpen = false;
+        },
+        
+        positionSubmenu() {
+            const triggerEl = this.$el.querySelector('[x-ref="submenuTrigger"]');
+            if (!triggerEl) {
+                console.log('No trigger element found for submenu');
+                return;
+            }
+            
+            const rect = triggerEl.getBoundingClientRect();
+            const submenuWidth = 200; // Increased for better fit
+            const submenuHeight = 150; // More realistic height
+            const padding = 8;
+            const offset = 8; // Increased offset from trigger
+            
+            let x = rect.right + offset;
+            let y = rect.top;
+            
+            // Check right edge - show submenu on left if needed
+            if (x + submenuWidth > window.innerWidth - padding) {
+                x = rect.left - submenuWidth - offset;
+            }
+            
+            // Check bottom edge
+            if (y + submenuHeight > window.innerHeight - padding) {
+                y = Math.max(padding, window.innerHeight - submenuHeight - padding);
+            }
+            
+            // Check top edge
+            if (y < padding) {
+                y = padding;
+            }
+            
+            // Ensure submenu doesn't go off left edge when positioned on left
+            if (x < padding) {
+                x = padding;
+            }
+            
+            this.submenuPosition = { x, y };
+        }
+    }`
+    @mouseenter="openSubmenu()"
+    @mouseleave="setTimeout(() => { if (!$refs.submenuContent?.matches(':hover') && !$el.matches(':hover')) closeSubmenu(); }, 150)"
+    class={cn('relative', className)}
+    {...restAlpineProps}
+>
+    <slot />
+
+    <!-- Submenu Content -->
+    <template x-teleport="body">
+        <div
+            x-show="submenuOpen"
+            x-ref="submenuContent"
+            x-transition:enter="transition ease-out duration-100"
+            x-transition:enter-start="transform opacity-0 scale-95"
+            x-transition:enter-end="transform opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-75"
+            x-transition:leave-start="transform opacity-100 scale-100"
+            x-transition:leave-end="transform opacity-0 scale-95"
+            :style="`position: fixed; left: ${submenuPosition.x}px; top: ${submenuPosition.y}px; z-index: 60;`"
+            class="rounded-md border bg-popover text-popover-foreground shadow-md py-1"
+            role="menu"
+            @mouseenter="clearTimeout()"
+            @mouseleave="closeSubmenu()"
+        >
+            <slot name="submenu" />
+        </div>
+    </template>
+</div>

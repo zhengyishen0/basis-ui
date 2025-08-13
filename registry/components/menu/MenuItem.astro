@@ -1,0 +1,78 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const menuItemVariants = cva(
+  'relative flex cursor-default select-none items-center rounded-sm text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
+  {
+    variants: {
+      variant: {
+        default: 'px-3 py-2 min-w-48 text-left',
+        command: 'px-2 py-1.5'
+      }
+    },
+    defaultVariants: {
+      variant: 'default'
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof menuItemVariants> {
+    shortcut?: string;
+    className?: string;
+    disabled?: boolean;
+    activeModel?: string;  // 'activeIndex' or 'commandActiveIndex'
+    role?: 'menuitem' | 'option' | 'button';
+    onSelect?: string;     // Click handler
+    item?: any;            // Dynamic item data
+    [key: string]: any;
+}
+
+const {
+    shortcut,
+    disabled = false,
+    className,
+    variant = 'default',
+    activeModel = 'activeIndex',
+    role = 'menuitem',
+    onSelect,
+    item,
+    ...alpineProps
+} = Astro.props;
+
+// Extract x-text from alpineProps for dynamic text binding
+const { 'x-text': xText, ...restProps } = alpineProps;
+
+// Extract item from props if passed (for dynamic x-for usage)
+const isDisabled = disabled;
+---
+
+<div
+    data-menu-item
+    x-init={item ? `$el.itemData = ${item}` : undefined}
+    @mouseenter={item ? `
+      const container = $el.closest('[x-data]');
+      if (container && container.flattenedItems) {
+        container.${activeModel} = container.flattenedItems.findIndex(flatItem => flatItem === $el.itemData);
+      }
+    ` : `
+      const container = $el.closest('[x-data]');
+      if (container) {
+        container.${activeModel} = Array.from(container.querySelectorAll('[data-menu-item]')).indexOf($el);
+      }
+    `}
+    @click={item ? `!${item}.disabled && ${onSelect || 'selectItem(' + item + ')'}` : onSelect}
+    :aria-disabled={item ? `${item} && ${item}.disabled` : isDisabled.toString()}
+    :class={item ? `${JSON.stringify(cn(menuItemVariants({ variant }), className))} + (${item} && ${item}.disabled ? ' pointer-events-none opacity-50' : '') + ((typeof ${activeModel} !== 'undefined' && typeof flattenedItems !== 'undefined' && ${activeModel} === flattenedItems.findIndex(flatItem => flatItem === ${item})) ? ' bg-accent text-accent-foreground' : '')` : `
+      ${JSON.stringify(cn(menuItemVariants({ variant }), isDisabled && 'pointer-events-none opacity-50', className))} + 
+      ((typeof ${activeModel} !== 'undefined' && $el.parentElement && ${activeModel} === Array.from($el.parentElement.querySelectorAll('[data-menu-item]')).indexOf($el)) ? ' bg-accent text-accent-foreground' : '')
+    `}
+    role={role}
+    tabindex="-1"
+    {...restProps}
+>
+    <slot name="icon" />
+    {xText && <span x-text={xText}></span>}
+    <slot />
+    <slot name="shortcut" />
+</div>

@@ -1,0 +1,135 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface NavigationMenuItemData {
+  id: string;
+  label: string;
+  type: 'link' | 'list' | 'grid' | 'feature';
+  href?: string;
+  disabled?: boolean;
+  links?: Array<{
+    id: string;
+    title: string;
+    url: string;
+    description?: string;
+  }>;
+  gridColumns?: number; // For grid type layouts
+  featured?: {
+    title: string;
+    description: string;
+    href: string;
+    image?: string; // Optional background image, fallback to gradient
+  };
+  layout?: {
+    minWidth?: string;
+    gridColumns?: number;
+  };
+}
+
+export interface Props {
+  className?: string;
+  orientation?: 'horizontal' | 'vertical';
+  delayDuration?: number;
+  skipDelayDuration?: number;
+  [key: string]: any;
+}
+
+const {
+  className,
+  orientation = 'horizontal',
+  delayDuration = 200,
+  skipDelayDuration = 300,
+  ...alpineProps
+} = Astro.props;
+---
+
+<nav
+  x-data=`{
+    activeMenu: '',
+    openMenus: [],
+    hoverTimeout: null,
+    keyboardActive: false,
+    delayDuration: ${delayDuration},
+    skipDelayDuration: ${skipDelayDuration},
+    
+    openMenu(menuId) {
+      if (this.hoverTimeout) {
+        clearTimeout(this.hoverTimeout);
+        this.hoverTimeout = null;
+      }
+      this.activeMenu = menuId;
+      if (!this.openMenus.includes(menuId)) {
+        this.openMenus.push(menuId);
+      }
+    },
+    
+    closeMenu(menuId) {
+      this.activeMenu = this.activeMenu === menuId ? '' : this.activeMenu;
+      this.openMenus = this.openMenus.filter(id => id !== menuId);
+    },
+    
+    closeAllMenus() {
+      this.activeMenu = '';
+      this.openMenus = [];
+      this.keyboardActive = false;
+    },
+    
+    scheduleClose(menuId) {
+      if (this.hoverTimeout) {
+        clearTimeout(this.hoverTimeout);
+      }
+      this.hoverTimeout = setTimeout(() => {
+        this.closeMenu(menuId);
+      }, this.delayDuration);
+    },
+    
+    cancelClose() {
+      if (this.hoverTimeout) {
+        clearTimeout(this.hoverTimeout);
+        this.hoverTimeout = null;
+      }
+    },
+    
+    handleKeydown(event) {
+      this.keyboardActive = true;
+      const items = Array.from($el.querySelectorAll('[data-navigation-menu-item]'));
+      const currentIndex = items.findIndex(item => item === document.activeElement || item.contains(document.activeElement));
+      
+      switch (event.key) {
+        case 'ArrowRight':
+          event.preventDefault();
+          const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+          items[nextIndex]?.querySelector('[data-navigation-menu-trigger]')?.focus();
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+          items[prevIndex]?.querySelector('[data-navigation-menu-trigger]')?.focus();
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          if (this.activeMenu) {
+            const firstLink = $el.querySelector('[data-navigation-menu-content="' + this.activeMenu + '"] [data-navigation-menu-link]');
+            firstLink?.focus();
+          }
+          break;
+        case 'Escape':
+          event.preventDefault();
+          this.closeAllMenus();
+          break;
+      }
+    }
+  }`
+  @keydown="handleKeydown($event)"
+  @click.outside="closeAllMenus()"
+  @focusout="!$el.contains($event.relatedTarget) && closeAllMenus()"
+  class={cn(
+    'relative z-10 flex max-w-max flex-1 items-center justify-center',
+    orientation === 'vertical' && 'flex-col',
+    className
+  )}
+  data-orientation={orientation}
+  {...alpineProps}
+>
+  <slot />
+</nav>

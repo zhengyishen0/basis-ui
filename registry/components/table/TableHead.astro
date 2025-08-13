@@ -1,0 +1,46 @@
+---
+import { cn } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  sortable?: boolean;
+  align?: 'left' | 'center' | 'right';
+  width?: string;
+  class?: string;
+  [key: string]: any;
+}
+
+const { 
+  sortable = false,
+  align = 'left',
+  width,
+  class: className, 
+  ...alpineProps 
+} = Astro.props;
+
+const alignClasses = {
+  left: 'text-left',
+  center: 'text-center', 
+  right: 'text-right'
+};
+---
+
+<th 
+  class={cn(
+    "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+    alignClasses[align],
+    sortable && "cursor-pointer hover:text-foreground transition-colors",
+    width && `w-${width}`,
+    className
+  )}
+  {...alpineProps}
+>
+  <div class={cn("flex items-center gap-2", align === 'center' && "justify-center", align === 'right' && "justify-end")}>
+    <slot />
+    {sortable && (
+      <slot name="sort-icon">
+        <Icon name="lucide:chevrons-up-down" class="h-4 w-4 opacity-50" />
+      </slot>
+    )}
+  </div>
+</th>

@@ -1,0 +1,116 @@
+---
+import { cn } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  href?: string;
+  separator?: 'chevron' | 'slash' | 'dot' | 'arrow';
+  icon?: string;
+  item?: any; // Dynamic item data
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  href,
+  separator,
+  icon,
+  item,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-text from alpineProps for dynamic text binding
+const { 'x-text': xText, ':href': dynamicHref, ':separator': dynamicSeparator, ...restProps } = alpineProps;
+---
+
+<div class="contents">
+  <li class={cn('flex items-center', className)} {...restProps}>
+    {item ? (
+      // Dynamic item rendering
+      <>
+        <template x-if="item.href && !item.current">
+          <a
+            :href={dynamicHref || 'item.href'}
+            class="flex items-center gap-1.5 no-underline"
+          >
+            {icon && (
+              <svg class="w-4 h-4" x-show={`item.icon === '${icon}'`}>
+                <!-- Dynamic icon content -->
+              </svg>
+            )}
+            {xText && <span x-text={xText}></span>}
+            <slot />
+          </a>
+        </template>
+        
+        <template x-if="!item.href || item.current">
+          <span 
+            class="text-foreground font-medium flex items-center gap-1.5"
+            aria-current="page"
+          >
+            {icon && (
+              <svg class="w-4 h-4" x-show={`item.icon === '${icon}'`}>
+                <!-- Dynamic icon content -->
+              </svg>
+            )}
+            {xText && <span x-text={xText}></span>}
+            <slot />
+          </span>
+        </template>
+      </>
+    ) : (
+      // Static rendering
+      href ? (
+        <a
+          href={href}
+          class="flex items-center gap-1.5 no-underline"
+        >
+          {icon && (
+            <svg class="w-4 h-4">
+              <!-- Static icon content -->
+            </svg>
+          )}
+          {xText && <span x-text={xText}></span>}
+          <slot />
+        </a>
+      ) : (
+        <span 
+          class="text-foreground font-medium flex items-center gap-1.5"
+          aria-current="page"
+        >
+          {icon && (
+            <svg class="w-4 h-4">
+              <!-- Static icon content -->
+            </svg>
+          )}
+          {xText && <span x-text={xText}></span>}
+          <slot />
+        </span>
+      )
+    )}
+  </li>
+  
+  <!-- Separator -->
+  {item ? (
+    <span 
+      class="mx-2 text-muted-foreground flex items-center"
+      x-show={dynamicSeparator ? dynamicSeparator : `'${separator}' && (typeof items !== 'undefined' ? index < items.length - 1 : true)`}
+    >
+      <slot name="separator">
+        <Icon name="lucide:chevron-right" class="w-4 h-4" />
+      </slot>
+    </span>
+  ) : (
+    (separator || Astro.slots.has('separator')) && (
+      <span class="mx-2 text-muted-foreground flex items-center">
+        <slot name="separator">
+          {separator === 'chevron' && <Icon name="lucide:chevron-right" class="w-4 h-4" />}
+          {separator === 'slash' && <span>/</span>}
+          {separator === 'dot' && <span>•</span>}
+          {separator === 'arrow' && <Icon name="lucide:chevron-right" class="w-4 h-4" />}
+        </slot>
+      </span>
+    )
+  )}
+</div>

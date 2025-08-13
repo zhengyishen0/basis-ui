@@ -1,0 +1,82 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const navigationMenuLinkVariants = cva(
+  'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
+  {
+    variants: {
+      variant: {
+        default: '',
+        active: 'bg-accent text-accent-foreground'
+      }
+    },
+    defaultVariants: {
+      variant: 'default'
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof navigationMenuLinkVariants> {
+  href?: string;
+  active?: boolean;
+  className?: string;
+  disabled?: boolean;
+  link?: any;  // Dynamic link data
+  [key: string]: any;
+}
+
+const {
+  href,
+  active = false,
+  disabled = false,
+  className,
+  variant = active ? 'active' : 'default',
+  link,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-text from alpineProps for dynamic text binding
+const { 'x-text': xText, ...restProps } = alpineProps;
+
+const Tag = href || link ? 'a' : 'div';
+---
+
+<!-- Dynamic link with link data from Alpine scope -->
+<template x-if="typeof link !== 'undefined'">
+  <a
+    :href="link.url"
+    @click="closeAllMenus()"
+    @keydown.enter.prevent="window.location.href = link.url; closeAllMenus()"
+    class={cn(
+      'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
+      className
+    )}
+    data-navigation-menu-link
+    tabindex="0"
+    {...restProps}
+  >
+    <div class="text-sm font-medium leading-none" x-text="link.title"></div>
+    <p class="line-clamp-2 text-sm leading-snug text-muted-foreground" x-text="link.description"></p>
+  </a>
+</template>
+
+<!-- Static link -->
+<template x-if="typeof link === 'undefined'">
+  <a
+    href={href}
+    @click="closeAllMenus()"
+    @keydown.enter.prevent={href ? `window.location.href = '${href}'; closeAllMenus()` : ''}
+    class={cn(
+      navigationMenuLinkVariants({ variant }),
+      disabled && 'pointer-events-none opacity-50',
+      className
+    )}
+    data-navigation-menu-link
+    tabindex="0"
+    {...restProps}
+  >
+    <span x-text={xText} x-show={xText}></span>
+    <slot />
+  </a>
+</template>

@@ -1,0 +1,45 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const tabsListVariants = cva(
+    'relative inline-flex items-center select-none w-fit h-fit',
+    {
+        variants: {
+            variant: {
+                pills: 'bg-muted rounded-lg p-1 gap-1',
+                ghost: 'bg-transparent p-0 gap-1',
+            },
+            orientation: {
+                horizontal: 'flex-row',
+                vertical: 'flex-col',
+            },
+        },
+    }
+);
+
+export interface Props extends VariantProps<typeof tabsListVariants> {
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    variant = 'pills',
+    orientation = 'horizontal',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<div
+    class={cn(
+        tabsListVariants({ variant, orientation }),
+        'tabs-list',
+        className
+    )}
+    role="tablist"
+    :data-orientation="orientation"
+    {...alpineProps}
+>
+    <slot />
+</div>

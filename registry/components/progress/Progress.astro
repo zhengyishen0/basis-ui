@@ -1,0 +1,173 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const progressVariants = cva(
+  'relative w-full overflow-hidden rounded-full bg-muted h-2'
+);
+
+const progressFillVariants = cva(
+  'h-full transition-all duration-300 ease-linear',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary',
+        secondary: 'bg-secondary', 
+        destructive: 'bg-destructive',
+        success: 'bg-success',
+        warning: 'bg-warning',
+        info: 'bg-info'
+      }
+    },
+    defaultVariants: {
+      variant: 'default'
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof progressFillVariants> {
+  value?: number;
+  max?: number;
+  animated?: boolean;
+  striped?: boolean;
+  showLabel?: boolean;
+  autoIncrement?: boolean;
+  incrementInterval?: number;
+  class?: string;
+  [key: string]: any; // Alpine.js pass-through
+}
+
+const { 
+  value = 0,
+  max = 100,
+  variant = 'default',
+  animated = false,
+  striped = false,
+  showLabel = false,
+  autoIncrement = false,
+  incrementInterval = 100,
+  class: className = '',
+  ...alpineProps
+} = Astro.props;
+---
+
+<!-- 
+Progress Component - Universal UI System
+
+Usage:
+<Progress 
+  value={75}
+  max={100}
+  animated={true}
+  striped={true}
+  showLabel={true}
+/>
+
+<Progress 
+  autoIncrement={true}
+  incrementInterval={100}
+/>
+
+Features:
+- Default theme-aware colors (bg-secondary track, bg-primary fill)
+- Fixed small size (h-2)
+- Animated and striped variants
+- Auto-increment functionality with controls
+- Optional progress labels
+- Alpine.js powered with pass-through props
+- CVA + cn() for proper class merging
+-->
+
+<div 
+  x-data={
+    `{
+      progress: ${value},
+      max: ${max},
+      autoIncrement: ${autoIncrement},
+      incrementInterval: ${incrementInterval},
+      progressInterval: null,
+      
+      get percentage() {
+        return Math.min((this.progress / this.max) * 100, 100);
+      },
+      
+      startAutoIncrement() {
+        if (!this.autoIncrement) return;
+        
+        this.progressInterval = setInterval(() => {
+          if (this.progress < this.max) {
+            this.progress += 1;
+          } else {
+            clearInterval(this.progressInterval);
+          }
+        }, this.incrementInterval);
+      },
+      
+      resetProgress() {
+        this.progress = 0;
+        if (this.progressInterval) {
+          clearInterval(this.progressInterval);
+        }
+        if (this.autoIncrement) {
+          this.startAutoIncrement();
+        }
+      }
+    }`
+  }
+  x-init="autoIncrement && startAutoIncrement()"
+  class={cn('w-full', className)}
+  {...alpineProps}
+>
+  <!-- Progress label -->
+  {showLabel && (
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm font-medium text-gray-700">Progress</span>
+      <span class="text-sm text-gray-500" x-text="`${Math.round(percentage)}%`"></span>
+    </div>
+  )}
+  
+  <!-- Progress bar container -->
+  <div class={cn(progressVariants())}>
+    <!-- Progress bar -->
+    <div 
+      :style="'width: ' + percentage + '%'"
+      class={cn(
+        progressFillVariants({ variant }),
+        striped && 'relative',
+        animated && 'animate-pulse'
+      )}
+      x-cloak
+    >
+      {striped && (
+        <!-- Diagonal striped pattern -->
+        <div class="absolute inset-0 bg-stripes opacity-60"></div>
+      )}
+    </div>
+  </div>
+  
+  <!-- Auto-increment controls -->
+  {autoIncrement && (
+    <div class="flex items-center justify-center mt-3 space-x-2">
+      <button 
+        @click="resetProgress()"
+        class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
+        type="button"
+      >
+        Reset
+      </button>
+    </div>
+  )}
+</div>
+
+<style>
+.bg-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1) 0,
+    rgba(255, 255, 255, 0.1) 0.5rem,
+    transparent 0.5rem,
+    transparent 1rem
+  );
+}
+</style>
+

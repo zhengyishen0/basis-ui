@@ -1,0 +1,285 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import Slider from '@/components/ui/forms/Slider.astro';
+import { Icon } from 'astro-icon/components';
+
+const videoPlayerVariants = cva(
+  'relative bg-black overflow-hidden max-w-2xl',
+  {
+    variants: {
+      shape: {
+        rectangle: 'rounded-none',
+        rounded: 'rounded-lg'
+      },
+      aspectRatio: {
+        '16/9': 'aspect-video',
+        '4/3': 'aspect-[4/3]',
+        '21/9': 'aspect-[21/9]'
+      }
+    },
+    defaultVariants: {
+      shape: 'rounded',
+      aspectRatio: '16/9'
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof videoPlayerVariants> {
+  // Video source options
+  src?: string;
+  poster?: string;
+  
+  // YouTube support
+  youtubeId?: string;
+  
+  // Playback options
+  autoplay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  
+  // Design options
+  shape?: 'rectangle' | 'rounded';
+  aspectRatio?: '16/9' | '4/3' | '21/9';
+  class?: string;
+}
+
+const { 
+  src,
+  poster,
+  youtubeId,
+  autoplay = false,
+  loop = false,
+  muted = false,
+  shape = 'rounded',
+  aspectRatio = '16/9',
+  class: className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<!-- VideoPlayer Component based on your beloved test video -->
+
+{youtubeId ? (
+  <!-- YouTube Video -->
+  <div class={cn(videoPlayerVariants({ shape, aspectRatio }), className)}>
+    <iframe 
+      src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&controls=1&modestbranding=1&rel=0${autoplay ? '&autoplay=1' : ''}`}
+      title="YouTube video player"
+      style="border: none;"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+      class="w-full h-full"
+    ></iframe>
+  </div>
+) : (
+  <!-- Local Video Player -->
+  <div 
+    x-data="{
+      playing: false,
+      muted: false,
+      volume: 1,
+      currentTime: 0,
+      duration: 0,
+      buffered: 0,
+      loading: true,
+      showControls: false,
+      
+      init() {
+        this.video = this.$refs.video;
+        
+        this.video.addEventListener('loadedmetadata', () => {
+          this.duration = this.video.duration;
+          this.loading = false;
+        });
+        
+        this.video.addEventListener('timeupdate', () => {
+          this.currentTime = this.video.currentTime;
+          if (this.video.buffered.length > 0) {
+            this.buffered = this.video.buffered.end(this.video.buffered.length - 1);
+          }
+        });
+        
+        this.video.addEventListener('play', () => {
+          this.playing = true;
+        });
+        
+        this.video.addEventListener('pause', () => {
+          this.playing = false;
+        });
+      },
+      
+      togglePlay() {
+        if (this.playing) {
+          this.video.pause();
+        } else {
+          this.video.play();
+        }
+      },
+      
+      toggleMute() {
+        this.muted = !this.muted;
+        this.video.muted = this.muted;
+      },
+      
+      setVolume(newVolume) {
+        this.volume = newVolume;
+        this.video.volume = newVolume;
+        this.muted = newVolume === 0;
+        this.video.muted = this.muted;
+      },
+      
+      formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return mins + ':' + secs.toString().padStart(2, '0');
+      },
+      
+      seekToPercentage(percentage) {
+        this.seek(this.duration * percentage / 100);
+      },
+      
+      seek(time) {
+        this.video.currentTime = Math.max(0, Math.min(this.duration, time));
+      },
+      
+      getProgressPercentage() {
+        return this.duration ? (this.currentTime / this.duration) * 100 : 0;
+      },
+      
+      getBufferedPercentage() {
+        return this.duration ? (this.buffered / this.duration) * 100 : 0;
+      }
+    }"
+    class={cn(videoPlayerVariants({ shape, aspectRatio }), className)}
+    @mouseenter="showControls = true"
+    @mouseleave="showControls = false"
+    {...alpineProps}
+  >
+    <!-- Video -->
+    <video
+      x-ref="video"
+      class="w-full h-full object-contain cursor-pointer"
+      poster={poster}
+      autoplay={autoplay}
+      loop={loop}
+      muted={muted}
+      @click="togglePlay()"
+    >
+      {src && <source src={src} type="video/mp4" />}
+      Your browser does not support the video tag.
+    </video>
+    
+    <!-- Loading -->
+    <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-black/50">
+      <div class="text-white">Loading...</div>
+    </div>
+    
+    <!-- Center Play Button -->
+    <div x-show="!playing && !loading" class="absolute inset-0 flex items-center justify-center">
+      <button 
+        @click="togglePlay()"
+        class="bg-black/50 hover:bg-black/70 text-white rounded-full p-4 transition-all duration-200 hover:scale-110"
+      >
+        <Icon name="lucide:play" class="w-8 h-8" fill="currentColor" />
+      </button>
+    </div>
+    
+    <!-- Controls with Gradient Background -->
+    <div 
+      class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 transition-opacity duration-200" 
+      :class="showControls ? 'opacity-100' : 'opacity-0'"
+    >
+      <!-- Progress Bar -->
+      <div class="mb-2 px-2">
+        <Slider
+          x-bind:value="currentTime"
+          x-bind:buffered="buffered"
+          x-bind:max="duration"
+          trackColor="bg-white/30"
+          bufferColor="bg-white/50"
+          progressColor="bg-white"
+          thumb="solid"
+          size="sm"
+          class="[&>*]:hover:scale-100 [&>*]:group-hover:scale-100"
+          @slider-drag="seek($event.detail.value)"
+          @slider-change="seek($event.detail.value)"
+        />
+      </div>
+      
+      <!-- Controls -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 pl-2">
+          <!-- Play/Pause -->
+          <button 
+            @click="togglePlay()"
+            class="text-white p-2 rounded"
+          >
+            <Icon name="lucide:play" x-show="!playing" class="w-6 h-6" fill="currentColor" />
+            <Icon name="lucide:pause" x-show="playing" class="w-6 h-6" fill="currentColor" />
+          </button>
+          
+          <!-- Time Display -->
+          <div class="text-white text-sm font-mono">
+            <span x-text="formatTime(currentTime)">0:00</span>
+            <span class="text-white/60"> / </span>
+            <span x-text="formatTime(duration)">0:00</span>
+          </div>
+        </div>
+        
+        <!-- Volume Control -->
+        <div class="flex items-center pr-4" x-data="{ volumeHovered: false }" @mouseenter="volumeHovered = true" @mouseleave="volumeHovered = false">
+          <!-- Volume Icon -->
+          <button 
+            @click="toggleMute()"
+            class="text-white p-2 rounded"
+          >
+            <Icon name="lucide:volume-2" x-show="!muted && volume > 0.5" class="w-5 h-5" />
+            <Icon name="lucide:volume-1" x-show="!muted && volume <= 0.5 && volume > 0" class="w-5 h-5" />
+            <Icon name="lucide:volume-x" x-show="muted || volume === 0" class="w-5 h-5" />
+          </button>
+          
+          <!-- Volume Slider -->
+          <div 
+            class="w-20 transition-opacity duration-200"
+            :class="volumeHovered ? 'opacity-100' : 'opacity-70'"
+          >
+            <Slider
+              value={100}
+              x-bind:value="volume * 100"
+              max={100}
+              trackColor="bg-white/30"
+              progressColor="bg-white"
+              thumb="solid"
+              size="sm"
+              class="[&>*]:hover:scale-100 [&>*]:group-hover:scale-100"
+              @slider-drag="setVolume($event.detail.value / 100)"
+              @slider-change="setVolume($event.detail.value / 100)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+<!-- 
+Usage Examples:
+
+Local Video:
+<VideoPlayer 
+  src="/video.mp4"
+  poster="/poster.jpg"
+  shape="rounded"
+  aspectRatio="16/9"
+  autoplay={true}
+/>
+
+YouTube Video:
+<VideoPlayer 
+  youtubeId="dQw4w9WgXcQ"
+  shape="rectangle"
+  aspectRatio="21/9"
+  autoplay={true}
+/>
+-->

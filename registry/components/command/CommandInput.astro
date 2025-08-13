@@ -1,0 +1,29 @@
+---
+import MenuInput from '../menu/MenuInput.astro';
+
+export interface Props {
+  placeholder?: string;
+  class?: string;
+  showIcon?: boolean;
+  [key: string]: any;
+}
+
+const {
+  placeholder = 'Type a command or search...',
+  showIcon = true,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<MenuInput
+  placeholder={placeholder}
+  showIcon={showIcon}
+  class={className}
+  searchModel="commandSearch"
+  onNext="itemActiveNext()"
+  onPrevious="itemActivePrevious()"
+  onSelect="selectActiveItem()"
+  onEscape="commandSearch = ''; commandActiveIndex = 0"
+  {...alpineProps}
+/>

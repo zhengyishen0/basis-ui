@@ -1,0 +1,42 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const accordionItemVariants = cva(
+    'duration-200 ease-out bg-background border border-border rounded-md cursor-pointer group mb-2',
+    {
+        variants: {
+            variant: {
+                default: 'bg-background border-border',
+                elevated: 'bg-background border-border shadow-elevated',
+                flat: 'bg-background border-border shadow-flat',
+            },
+        },
+    }
+);
+
+export interface Props extends VariantProps<typeof accordionItemVariants> {
+    variant?: 'default' | 'elevated' | 'flat';
+    class?: string;
+    [key: string]: any;
+}
+
+const {
+    variant = 'default',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+---
+
+<template x-for={xFor} x-key={xKey || 'item.id'}>
+  <div
+    x-data="{ id: item.id }"
+    {...restProps}
+    class={cn(accordionItemVariants({ variant }), className)}
+  >
+    <slot />
+  </div>
+</template>

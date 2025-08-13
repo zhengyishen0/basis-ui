@@ -1,0 +1,98 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { semanticVariants, overflowVariants } from '@/lib/component-variants';
+import { Icon } from 'astro-icon/components';
+
+const checkboxIndicatorVariants = cva(
+    'relative flex items-center justify-center shrink-0 transform-gpu rounded-md bg-white transition-all duration-300 ease-out h-5 w-5 border border-primary shadow-sm',
+    {
+        variants: {
+            state: {
+                default: '',
+                checked: 'bg-white border-primary',
+                indeterminate: 'bg-white border-primary',
+                disabled: 'opacity-50 cursor-not-allowed',
+            },
+        },
+    }
+);
+
+export interface Props extends VariantProps<typeof checkboxIndicatorVariants> {
+    checked?: boolean;
+    indeterminate?: boolean;
+    disabled?: boolean;
+    name?: string;
+    value?: string;
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    checked = false,
+    indeterminate = false,
+    disabled = false,
+    state = 'default',
+    name,
+    value,
+    class: className,
+    ...alpineProps
+} = Astro.props;
+
+// Extract Alpine expressions from alpineProps if they exist
+const {
+    ':checked': checkedExpr,
+    ':indeterminate': indeterminateExpr,
+    ':disabled': disabledExpr,
+    ...restAlpineProps
+} = alpineProps;
+---
+
+<!-- 
+CheckboxIndicator Component
+
+A reusable checkbox visual indicator that can be used in various contexts.
+
+Usage:
+<Icon name="lucide:check"boxIndicator checked={true} />
+<Icon name="lucide:check"boxIndicator :checked="isSelected" />
+<Icon name="lucide:check"boxIndicator indeterminate={true} />
+<Icon name="lucide:check"boxIndicator disabled={true} />
+
+Features:
+- Checked/unchecked/indeterminate states
+- Smooth transitions and animations
+- Disabled state styling
+- Alpine.js reactive support
+-->
+<div class="checkbox-input-wrapper relative" {...restAlpineProps}>
+    <div
+        class={cn(
+            checkboxIndicatorVariants({ state }),
+            className
+        )}
+        :class={`[
+            (${checkedExpr || checked}) || (${indeterminateExpr || indeterminate}) ? 'bg-white border-primary' : 'bg-white border-primary',
+            ${disabledExpr || disabled} ? 'opacity-50 cursor-not-allowed' : 'group-hover:border-primary/80'
+        ]`}
+    >
+        <!-- Checkmark icon -->
+        <div
+            class="text-primary transition-all duration-300 ease-out transform-gpu"
+            :class={`${checkedExpr || checked} ? 'opacity-100 scale-100' : 'opacity-0 scale-0'`}
+            x-show={`!(${indeterminateExpr || indeterminate})`}
+        >
+            <Icon name="lucide:check" class="stroke-current h-3 w-3" />
+        </div>
+
+        <!-- Indeterminate indicator -->
+        <div
+            class="text-primary transition-all duration-300 ease-out transform-gpu"
+            :class={`${indeterminateExpr || indeterminate} ? 'opacity-100 scale-100' : 'opacity-0 scale-0'`}
+            x-show={`${indeterminateExpr || indeterminate}`}
+        >
+            <!-- Horizontal line for indeterminate -->
+            <div class="bg-current rounded-full h-0.5 w-3"></div>
+        </div>
+    </div>
+</div>

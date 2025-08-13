@@ -1,0 +1,70 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import { semanticVariants, sizes, shapes, elevationOptions, interactiveEffects } from '@/lib/component-variants';
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-sm whitespace-nowrap font-medium tracking-wide no-underline [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: semanticVariants,
+      size: sizes,
+      shape: shapes,
+      elevation: elevationOptions,
+      effect: interactiveEffects
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof buttonVariants> {
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  className?: string;
+  href?: string;
+  // Alpine.js pass-through
+  [key: string]: any;
+}
+
+const { 
+  variant = "default",
+  size = "md",
+  shape = "rounded",
+  elevation = "none",
+  effect,
+  disabled = false,
+  type = 'button',
+  className,
+  href,
+  ':href': dynamicHref,
+  ...alpineProps
+} = Astro.props;
+
+// Check for both static href and Alpine.js dynamic :href
+const Tag = (href || dynamicHref) ? 'a' : 'button';
+---
+
+<!-- 
+Pine UI Button Component - Refactored with CVA + shadcn patterns
+
+Usage:
+<Button variant="default" size="default">Click me</Button>
+<Button variant="outline" disabled>Disabled</Button>
+<Button variant="destructive" size="lg">Delete</Button>
+<Button variant="ghost" size="sm">Cancel</Button>
+<Button href="/about" variant="link">Link Button</Button>
+
+Variants: default, destructive, outline, secondary, ghost, link
+Sizes: xs, sm, default, md, lg, icon
+Props: href (renders as <a> tag when provided)
+-->
+
+<Tag 
+  type={(href || dynamicHref) ? undefined : type}
+  href={href}
+  disabled={(href || dynamicHref) ? undefined : disabled}
+  class={cn(buttonVariants({ variant, size, shape, elevation, effect }), className)}
+  {...(dynamicHref ? {':href': dynamicHref} : {})}
+  {...alpineProps}
+>
+  <slot />
+</Tag>

@@ -1,0 +1,88 @@
+---
+import { cn } from '@/lib/utils';
+import CheckboxIndicator from '../indicators/CheckboxIndicator.astro';
+
+export interface Props {
+    id?: string;
+    name?: string;
+    checked?: boolean;
+    indeterminate?: boolean;
+    disabled?: boolean;
+    label?: string;
+    class?: string;
+    // Alpine.js pass-through
+    [key: string]: any;
+}
+
+const {
+    id,
+    name = id,
+    checked = false,
+    indeterminate = false,
+    disabled = false,
+    label,
+    class: className = '',
+    ...alpineProps
+} = Astro.props;
+---
+
+<label
+    class={cn(
+        'relative inline-flex items-center gap-3 cursor-pointer group disabled:cursor-not-allowed text-base',
+        className
+    )}
+    x-id="['checkbox']"
+    :for="$id('checkbox')"
+    x-data={`{ isChecked: ${checked}, isIndeterminate: ${indeterminate}, isDisabled: ${disabled} }`}
+>
+    <!-- Native input for accessibility and form handling -->
+    <input
+        type="checkbox"
+        :id="$id('checkbox')"
+        name={name || id}
+        :checked="isChecked"
+        :disabled="isDisabled"
+        class="sr-only peer"
+        x-model="isChecked"
+        {...alpineProps}
+    />
+
+    <!-- Checkbox visual indicator -->
+    <CheckboxIndicator
+        :checked="isChecked"
+        :indeterminate="isIndeterminate"
+        :disabled="isDisabled"
+    />
+
+    <!-- Label with disabled state -->
+    {
+        label && (
+            <span
+                class={cn(
+                    'font-medium leading-none select-none',
+                    'peer-disabled:opacity-50',
+                    'transition-colors duration-200'
+                )}
+            >
+                {label}
+            </span>
+        )
+    }
+</label>
+
+<!-- 
+Usage Examples:
+
+<Checkbox label="Accept terms" />
+<Checkbox checked={true} disabled={true} />
+<Checkbox indeterminate={true} />
+<Checkbox x-model="isChecked" />
+
+Features:
+- Checked/unchecked/indeterminate states
+- Uses CheckboxIndicator component
+- Smooth animations and transitions
+- Disabled state support
+- Full Alpine.js integration
+- Hardware accelerated animations
+-->

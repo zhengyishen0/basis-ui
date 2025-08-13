@@ -1,0 +1,94 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+    closeable?: boolean;
+    lockScroll?: boolean;
+    keyboardShortcut?: string;
+    autoFocus?: boolean;
+    focusSelector?: string;
+    className?: string;
+    [key: string]: any;
+}
+
+const {
+    closeable = true,
+    lockScroll = true,
+    keyboardShortcut,
+    autoFocus = false,
+    focusSelector = 'input, button, [tabindex]:not([tabindex="-1"])',
+    className,
+    ...alpineProps
+} = Astro.props;
+
+// Parse keyboard shortcut if provided
+let shortcutKey = '';
+let withMeta = false;
+if (keyboardShortcut) {
+    shortcutKey = keyboardShortcut.includes('cmd+') ? keyboardShortcut.split('cmd+')[1] : 
+                  keyboardShortcut.includes('ctrl+') ? keyboardShortcut.split('ctrl+')[1] : keyboardShortcut;
+    withMeta = keyboardShortcut.includes('cmd+') || keyboardShortcut.includes('ctrl+');
+}
+
+const dialogId = `dialog-${Math.random().toString(36).substring(2, 11)}`;
+---
+
+<div 
+    x-data={`{
+        open: false,
+        dialogId: '${dialogId}',
+        closeable: ${closeable},
+        autoFocus: ${autoFocus},
+        focusSelector: '${focusSelector}',
+        toggle() {
+            this.open = !this.open;
+            if (this.open && this.autoFocus) {
+                this.$nextTick(() => {
+                    const dialogEl = document.getElementById(this.dialogId);
+                    if (dialogEl) {
+                        const focusableEl = dialogEl.querySelector(this.focusSelector);
+                        if (focusableEl) focusableEl.focus();
+                    }
+                });
+            }
+        },
+        close() { 
+            // Reset the focusSelector element in the dialog
+            const dialogEl = document.getElementById(this.dialogId);
+            if (dialogEl) {
+                const focusableEl = dialogEl.querySelector(this.focusSelector);
+                if (focusableEl && (focusableEl.tagName === 'INPUT' || focusableEl.tagName === 'TEXTAREA')) {
+                    focusableEl.value = '';
+                    // Trigger input event to update Alpine.js models
+                    focusableEl.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+            this.open = false; 
+        },
+        init() {
+            ${keyboardShortcut ? `
+            this.$nextTick(() => {
+                const handleKeydown = (e) => {
+                    // Only trigger when dialog is closed and event target is not within this dialog
+                    if (!this.open && 
+                        !this.$el.contains(e.target) &&
+                        ${withMeta ? '(e.metaKey || e.ctrlKey)' : 'true'} && 
+                        e.key.toLowerCase() === '${shortcutKey.toLowerCase()}') {
+                        e.preventDefault();
+                        this.toggle();
+                    }
+                };
+                document.addEventListener('keydown', handleKeydown);
+                this.$cleanup = () => document.removeEventListener('keydown', handleKeydown);
+            });` : ''}
+        },
+        destroy() {
+            if (this.$cleanup) this.$cleanup();
+        }
+    }`}
+    @keydown.escape.window="open && closeable && close()"
+    class={cn('relative', className)}
+    {...alpineProps}
+>
+    <slot />
+</div>

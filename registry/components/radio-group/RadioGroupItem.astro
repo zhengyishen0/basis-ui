@@ -1,0 +1,82 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { sizes, overflowVariants } from '@/lib/component-variants';
+import RadioIndicator from '@/components/ui/indicators/RadioIndicator.astro';
+
+const radioGroupItemVariants = cva(
+    'radio-option group flex gap-3 p-4 border border-border rounded-lg transition-all duration-300 ease-out transform-gpu hover:border-primary/50 hover:bg-primary/5 has-[:checked]:border-primary has-[:checked]:bg-primary/10',
+    {
+        variants: {
+            variant: {
+                default: 'cursor-pointer',
+                disabled: 'cursor-not-allowed opacity-50 hover:border-border hover:bg-transparent',
+            },
+            layout: {
+                vertical: 'items-start',
+                horizontal: 'items-center',
+            },
+            size: sizes,
+            overflow: overflowVariants
+        }
+    }
+);
+
+export interface Props extends VariantProps<typeof radioGroupItemVariants> {
+    value?: string;
+    disabled?: boolean;
+    option?: any; // Dynamic option data
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    value,
+    disabled = false,
+    layout = 'vertical',
+    size = 'md',
+    variant = 'default',
+    overflow = 'fixed',
+    option,
+    class: className,
+    ...alpineProps
+} = Astro.props;
+
+// For dynamic options, use option properties; for static items, use props
+const itemValue = option ? option.value : value;
+---
+
+<label
+    x-data={option ? "{ id: $id('radio'), itemDisabled: (disabled || option.disabled) }" : "{ id: $id('radio'), itemDisabled: disabled }"}
+    @click={option ? "!disabled && !option.disabled && setSelectedOption(option.value)" : `!disabled && setSelectedOption('${itemValue}')`}
+    {...alpineProps}
+    class="radio-option group flex gap-3 p-4 border border-border rounded-lg transition-all duration-300 ease-out transform-gpu has-[:checked]:border-primary has-[:checked]:bg-primary/10"
+    :class={option ? `[
+        (disabled || option.disabled) ? '' : 'hover:border-primary/50 hover:bg-primary/5',
+        (disabled || option.disabled) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+    ]` : `disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-primary/50 hover:bg-primary/5'`}
+    x-cloak
+>
+    <!-- Radio input (hidden but functional) -->
+    <input
+        type="radio"
+        :name="name"
+        :value={option ? "option.value" : `'${itemValue}'`}
+        class="sr-only peer"
+        :disabled={option ? "disabled || option.disabled" : "disabled"}
+        x-model="selectedOption"
+    />
+    
+    <!-- Radio visual indicator -->
+    <div class="mt-0.5 has-[p]:mt-1">
+        <RadioIndicator
+            :checked={option ? "selectedOption === option.value" : `selectedOption === '${itemValue}'`}
+            :disabled={option ? "disabled || option.disabled" : "disabled"}
+        />
+    </div>
+
+    <!-- Content area -->
+    <div class="radio-content flex-1 min-w-0">
+        <slot />
+    </div>
+</label>

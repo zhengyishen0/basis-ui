@@ -1,0 +1,35 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const footerVariants = cva('flex items-center min-h-16', {
+    variants: {
+        justify: {
+            start: 'justify-start',
+            end: 'justify-end',
+            center: 'justify-center',
+            between: 'justify-between',
+        },
+        gap: {
+            sm: 'gap-2',
+            md: 'gap-4',
+            lg: 'gap-6',
+        },
+    },
+    defaultVariants: { justify: 'end', gap: 'sm' },
+});
+
+export interface Props extends VariantProps<typeof footerVariants> {
+    className?: string;
+    [key: string]: any;
+}
+
+const { justify = 'end', gap = 'sm', className, ...alpineProps } = Astro.props;
+---
+
+<footer
+    class={cn(footerVariants({ justify, gap }), className)}
+    {...alpineProps}
+>
+    <slot />
+</footer>

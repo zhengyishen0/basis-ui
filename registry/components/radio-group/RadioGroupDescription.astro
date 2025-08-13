@@ -1,0 +1,67 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { overflowVariants } from '@/lib/component-variants';
+
+const radioGroupDescriptionVariants = cva(
+    'radio-description text-sm text-muted-foreground mt-1 transition-colors duration-200',
+    {
+        variants: {
+            variant: {
+                default: '',
+                emphasized: 'text-foreground/80',
+                subtle: 'text-muted-foreground/70',
+            },
+            size: {
+                xs: 'text-xs',
+                sm: 'text-sm',
+                md: 'text-base',
+            },
+            overflow: overflowVariants
+        }
+    }
+);
+
+export interface Props extends VariantProps<typeof radioGroupDescriptionVariants> {
+    text?: string;
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    text,
+    variant = 'default',
+    size = 'sm',
+    overflow = 'fixed',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<!-- 
+RadioGroupDescription Component
+
+Usage:
+<RadioGroupDescription>Perfect for small teams</RadioGroupDescription>
+<RadioGroupDescription text="Perfect for small teams" />
+<RadioGroupDescription variant="emphasized">Best for growing businesses</RadioGroupDescription>
+
+Features:
+- Static or dynamic text content
+- Multiple visual variants
+- Responsive to parent disabled state
+- Works with x-for loops
+- Optional conditional rendering
+-->
+
+<p
+    {...alpineProps}
+    class={cn(
+        radioGroupDescriptionVariants({ variant, size, overflow }),
+        className
+    )}
+    :class="(itemDisabled || disabled) ? 'opacity-50' : ''"
+>
+    <slot />
+    {text && <span x-text={text}></span>}
+</p>

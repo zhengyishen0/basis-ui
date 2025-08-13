@@ -1,0 +1,37 @@
+---
+import { cn } from '@/lib/utils';
+import { cva } from 'class-variance-authority';
+import { overflowVariants, elevationOptions } from '@/lib/component-variants';
+
+const GridItemsVariants = cva('flex flex-col w-full gap-2 p-2', {
+    variants: {
+        overflow: overflowVariants,
+        elevation: elevationOptions,
+    },
+});
+
+export interface Props {
+    overflow?: 'auto' | 'fixed' | 'expand' | 'wrap' | 'show';
+    elevation?: 'flat' | 'shadow' | 'elevated' | 'floating' | 'lifted' | 'high';
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    overflow = 'expand',
+    elevation = 'flat',
+    class: className = '',
+    ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps so they don't get passed to the div
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+const classes = cn(GridItemsVariants({ overflow }), className);
+---
+
+<template x-for={xFor} x-key={xKey}>
+    <div class={classes} {...restProps}>
+        <slot />
+    </div>
+</template>

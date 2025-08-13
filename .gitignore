@@ -12,7 +12,4 @@ dist/
 packages/*/dist/
 packages/*/node_modules/
 
-# Registry build outputs
-registry/components/
-registry/lib/
-registry/index.json
+# Registry build outputs are now committed to GitHub for CLI access

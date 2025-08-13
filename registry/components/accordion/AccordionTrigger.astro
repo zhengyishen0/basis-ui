@@ -1,0 +1,86 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { semanticVariants, sizes, overflowVariants } from '@/lib/component-variants';
+// Using astro-icon for better performance - only loads the icons we need
+import { Icon } from 'astro-icon/components';
+import Text from '@/components/ui/display/Text.astro';
+
+const accordionTriggerVariants = cva(
+  'flex items-center justify-between w-full text-left',
+  {
+    variants: {
+      variant: {
+        default: 'hover:opacity-80',
+        subtle: 'opacity-70 hover:opacity-100'
+      },
+      size: sizes,
+      overflow: overflowVariants
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof accordionTriggerVariants> {
+  iconType?: 'chevron' | 'plus';
+  text?: string;
+  variant?: 'default' | 'subtle';
+  class?: string;
+  [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+  iconType = 'chevron',
+  size = 'md',
+  variant = 'default',
+  overflow = 'fixed',
+  text,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<button 
+  @click="setActiveAccordion(id)"
+  {...alpineProps}
+  :class={`"${cn(
+    accordionTriggerVariants({ size, variant, overflow }),
+    className
+  )}"`}
+  type="button"
+>
+  <Text variant="accordion-trigger" class="flex-1">
+    {text ? (
+      <span x-text={text}></span>
+    ) : (
+      <slot />
+    )}
+  </Text>
+  
+  <!-- Icon Area -->
+  <div class="relative flex items-center justify-center w-6 h-6 duration-300 ease-out ml-4">
+    <!-- Custom Icon Slot -->
+    <slot name="icon">
+      <!-- Default Icons -->
+      {iconType === 'plus' ? (
+        <div class="relative flex items-center justify-center">
+          <Icon 
+            name="lucide:plus"
+            class="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-all duration-300"
+            :class="{ 'opacity-0': activeAccordion==id }"
+          />
+          <Icon 
+            name="lucide:minus"
+            class="absolute w-4 h-4 text-muted-foreground group-hover:text-foreground transition-all duration-300"
+            :class="{ 'opacity-0': activeAccordion!=id }"
+          />
+        </div>
+      ) : (
+        <Icon 
+          name="lucide:chevron-down"
+          class="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-transform duration-200"
+          :class="{ 'rotate-180': activeAccordion==id }"
+        />
+      )}
+    </slot>
+  </div>
+</button>

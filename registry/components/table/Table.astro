@@ -1,0 +1,64 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const tableVariants = cva("min-w-full table-auto border-collapse", {
+  variants: {
+    variant: {
+      default: "border border-border",
+      bordered: "border-2 border-border",
+      striped: "[&_tbody_tr:nth-child(even)]:bg-muted/50",
+      hoverable: "[&_tbody_tr:hover]:bg-muted"
+    },
+    density: {
+      compact: "[&_th]:py-1 [&_td]:py-1 text-sm",
+      normal: "[&_th]:py-2 [&_td]:py-2",
+      comfortable: "[&_th]:py-3 [&_td]:py-3"
+    },
+    size: {
+      sm: "text-sm",
+      md: "text-base",
+      lg: "text-lg"
+    }
+  },
+  defaultVariants: {
+    variant: "default",
+    density: "normal",
+    size: "md"
+  }
+});
+
+export interface Props extends VariantProps<typeof tableVariants> {
+  responsive?: boolean;
+  class?: string;
+  [key: string]: any;
+}
+
+const { 
+  variant = "default",
+  density = "normal", 
+  size = "md",
+  responsive = true,
+  class: className,
+  ...alpineProps 
+} = Astro.props;
+
+const tableClasses = cn(
+  tableVariants({ variant, density, size }),
+  className
+);
+
+const wrapperClasses = cn(
+  "relative w-full",
+  responsive && "overflow-x-auto"
+);
+---
+
+<div class={wrapperClasses}>
+  <table 
+    class={tableClasses}
+    {...alpineProps}
+  >
+    <slot />
+  </table>
+</div>

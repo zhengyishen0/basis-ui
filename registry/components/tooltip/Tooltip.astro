@@ -1,0 +1,15 @@
+---
+import Popup from '../popup/Popup.astro';
+
+export interface Props {
+    delay?: number;
+    className?: string;
+    [key: string]: any;
+}
+
+const { delay = 500, className, ...alpineProps } = Astro.props;
+---
+
+<Popup trigger="hover" delay={delay} className={className} {...alpineProps}>
+    <slot />
+</Popup>

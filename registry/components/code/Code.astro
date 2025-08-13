@@ -1,0 +1,64 @@
+---
+import { cn } from '@/lib/utils';
+import { codeToHtml } from 'shiki';
+import CopyToClipboard from '@/components/ui/interactive/CopyToClipboard.astro';
+
+export interface Props {
+    code: string;
+    language?: string;
+    title?: string;
+    showCopy?: boolean;
+    theme?: 'github-light' | 'github-dark' | 'vitesse-light' | 'vitesse-dark';
+    class?: string;
+    [key: string]: any;
+}
+
+const {
+    code,
+    language = 'javascript',
+    title,
+    showCopy = true,
+    theme = 'github-light',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+
+// Generate syntax highlighted HTML using Shiki
+const highlightedCode = await codeToHtml(code, {
+    lang: language,
+    theme: theme,
+});
+---
+
+<div
+    class={cn(
+        'w-full prose prose-neutral dark:prose-invert max-w-none',
+        className
+    )}
+    {...alpineProps}
+>
+    {
+        title && (
+            <div class="flex items-center justify-between mb-2 not-prose">
+                <h4 class="text-sm font-medium text-foreground">{title}</h4>
+                <span class="text-xs text-muted-foreground uppercase tracking-wide">
+                    {language}
+                </span>
+            </div>
+        )
+    }
+
+    <div class="relative group bg-secondary rounded-lg overflow-hidden">
+        {
+            showCopy && (
+                <div class="absolute top-2 right-2 z-20 opacity-70 group-hover:opacity-100 transition-opacity">
+                    <CopyToClipboard text={code} variant="icon" />
+                </div>
+            )
+        }
+
+        <div class="[&>pre]:!bg-transparent [&>pre]:!m-0 [&>pre]:p-4">
+            <Fragment set:html={highlightedCode} />
+        </div>
+    </div>
+</div>

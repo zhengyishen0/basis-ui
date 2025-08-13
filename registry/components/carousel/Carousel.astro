@@ -1,0 +1,186 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const carouselVariants = cva('relative w-full overflow-hidden rounded-lg', {
+    variants: {
+        size: {
+            sm: 'h-48',
+            md: 'h-64',
+            lg: 'h-80',
+            xl: 'h-96',
+            full: 'h-full',
+        },
+    },
+    defaultVariants: {
+        size: 'md',
+    },
+});
+
+export interface Props extends VariantProps<typeof carouselVariants> {
+    images: Array<{
+        src: string;
+        alt?: string;
+        thumbnail?: string;
+        caption?: string;
+    }>;
+    autoPlayInterval?: number;
+    aspectRatio?: 'auto' | '1/1' | '16/9' | '4/3' | '3/2';
+    class?: string;
+    [key: string]: any;
+}
+
+const {
+    images,
+    size = 'md',
+    autoPlayInterval,
+    aspectRatio = '16/9',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+
+const autoPlay = !!autoPlayInterval;
+const finalAutoPlayInterval = autoPlayInterval || 3000;
+---
+
+<div
+    class={cn(carouselVariants({ size }), 'group', className)}
+    x-data={`{
+    currentSlide: 0,
+    images: ${JSON.stringify(images)},
+    autoPlayInterval: ${finalAutoPlayInterval},
+    autoPlayEnabled: ${autoPlay},
+    autoPlayTimer: null,
+    loop: true,
+    init() {
+      if (this.autoPlayEnabled) this.startAutoPlay();
+    },
+    startAutoPlay() {
+      this.autoPlayTimer = setInterval(() => this.next(), this.autoPlayInterval);
+    },
+    stopAutoPlay() {
+      if (this.autoPlayTimer) {
+        clearInterval(this.autoPlayTimer);
+        this.autoPlayTimer = null;
+      }
+    },
+    next() {
+      const nextSlide = this.currentSlide < this.images.length - 1 ? this.currentSlide + 1 : 0;
+      this.currentSlide = nextSlide;
+    },
+    prev() {
+      const prevSlide = this.currentSlide > 0 ? this.currentSlide - 1 : this.images.length - 1;
+      this.currentSlide = prevSlide;
+    },
+    goToSlide(index) {
+      this.currentSlide = index;
+    }
+  }`}
+    @mouseenter="stopAutoPlay()"
+    @mouseleave="autoPlayEnabled && startAutoPlay()"
+    {...alpineProps}
+>
+    <!-- Images Container -->
+    <div class="relative w-full h-full overflow-hidden">
+        <template x-for="(image, index) in images" :key="`slide-${index}`">
+            <div
+                :class="currentSlide === index ? 'opacity-100' : 'opacity-0'"
+                class="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+                :style="`z-index: ${currentSlide === index ? 2 : 1}`"
+            >
+                <img
+                    :src="image.src"
+                    :alt="image.alt || `Slide ${index + 1}`"
+                    class={cn(
+                        'w-full h-full object-cover',
+                        aspectRatio === '1/1' && 'aspect-square',
+                        aspectRatio === '16/9' && 'aspect-video',
+                        aspectRatio === '4/3' && 'aspect-[4/3]',
+                        aspectRatio === '3/2' && 'aspect-[3/2]'
+                    )}
+                />
+
+                <!-- Caption Overlay -->
+                <div
+                    x-show="image.caption"
+                    class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4"
+                >
+                    <p
+                        class="text-white text-sm font-medium"
+                        x-text="image.caption"
+                    >
+                    </p>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Navigation Arrows -->
+    <div
+        class="group-hover:opacity-100 opacity-0 transition-opacity duration-200"
+    >
+        <button
+            type="button"
+            class="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 text-white hover:text-gray-300 bg-black/30 hover:bg-black/50 rounded-full shadow-lg w-10 h-10 flex items-center justify-center p-0 transition-colors duration-200"
+            @click="prev()"
+        >
+            <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </button>
+
+        <button
+            type="button"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 text-white hover:text-gray-300 bg-black/30 hover:bg-black/50 rounded-full shadow-lg w-10 h-10 flex items-center justify-center p-0 transition-colors duration-200"
+            @click="next()"
+        >
+            <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Dots Navigation -->
+    <div
+        class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20"
+    >
+        <template x-for="(image, index) in images" :key="index">
+            <button
+                @click="goToSlide(index)"
+                :class="currentSlide === index ? 'bg-white shadow-lg' : 'bg-white/70'"
+                class="w-2.5 h-2.5 rounded-full transition-all duration-200 hover:bg-white border border-white/30"
+                type="button"></button>
+        </template>
+    </div>
+
+    <!-- Slide Counter (optional) -->
+    <slot name="counter">
+        <div
+            class="absolute top-2 right-2 bg-black/50 rounded px-2 py-1 z-20 group-hover:opacity-100 opacity-0 transition-opacity duration-200"
+        >
+            <span class="text-white text-xs font-medium">
+                <span x-text="currentSlide + 1"></span>
+                /
+                <span x-text="images.length"></span>
+            </span>
+        </div>
+    </slot>
+</div>

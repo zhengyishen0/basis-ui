@@ -1,0 +1,67 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const navigationMenuTriggerVariants = cva(
+  'group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50',
+  {
+    variants: {
+      variant: {
+        default: '',
+        ghost: 'hover:bg-accent hover:text-accent-foreground',
+        link: 'text-primary underline-offset-4 hover:underline'
+      }
+    },
+    defaultVariants: {
+      variant: 'default'
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof navigationMenuTriggerVariants> {
+  className?: string;
+  disabled?: boolean;
+  [key: string]: any;
+}
+
+const {
+  variant = 'default',
+  disabled = false,
+  className,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-text from alpineProps for dynamic rendering
+const { 'x-text': xText, ...restProps } = alpineProps;
+---
+
+<button
+  type="button"
+  @click="keyboardActive = true; toggle ? toggle() : (isOpen ? closeMenu(menuId) : openMenu(menuId))"
+  @keydown.arrow-down.prevent="openMenu(menuId); $nextTick(() => $el.closest('[data-navigation-menu-item]').querySelector('[data-navigation-menu-link]')?.focus())"
+  @keydown.enter.prevent="keyboardActive = true; isOpen ? closeMenu(menuId) : openMenu(menuId)"
+  @keydown.space.prevent="keyboardActive = true; isOpen ? closeMenu(menuId) : openMenu(menuId)"
+  :aria-expanded="isOpen"
+  :data-state="isOpen ? 'open' : 'closed'"
+  :disabled={disabled}
+  class={cn(
+    navigationMenuTriggerVariants({ variant }),
+    disabled && 'pointer-events-none opacity-50',
+    className
+  )}
+  data-navigation-menu-trigger
+  {...restProps}
+>
+  {xText && <span x-text={xText}></span>}
+  <slot />
+  <svg
+    class="relative top-[1px] ml-1 h-3 w-3 transition duration-200 group-data-[state=open]:rotate-180"
+    :class="isOpen && 'rotate-180'"
+    aria-hidden="true"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+  </svg>
+</button>

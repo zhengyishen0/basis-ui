@@ -1,0 +1,28 @@
+---
+import MenuItem from '../../overlay/menu/MenuItem.astro';
+
+export interface Props {
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  class: className,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+---
+
+<template x-for={xFor} x-key={xKey || 'item.value'}>
+  <MenuItem
+    x-on:click="selectedValue = item.value; selectedLabel = item.label || item.value; close()"
+    :class="selectedValue === item.value ? 'bg-accent text-accent-foreground' : ''"
+    :disabled="item.disabled"
+    class={className}
+    {...restProps}
+  >
+    <span x-text="item.label || item.value"></span>
+  </MenuItem>
+</template>
