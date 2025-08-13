@@ -8,13 +8,13 @@ import { diff } from './commands/diff.js';
 const program = new Command();
 
 program
-  .name('basis-ui')
+  .name('basisui')
   .description('Add beautiful Astro + Alpine.js components to your project')
   .version('0.1.4');
 
 program
   .command('init')
-  .description('Initialize your Astro project for basis-ui')
+  .description('Initialize your Astro project for basisui')
   .option('-y, --yes', 'Skip confirmation prompts')
   .option('-c, --cwd <cwd>', 'Current working directory', process.cwd())
   .action(init);

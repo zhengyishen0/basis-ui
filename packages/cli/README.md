@@ -2,9 +2,9 @@
 
 Beautiful, customizable Astro + Alpine.js components that you can copy and paste into your apps. Built for developers who want full control over their component code.
 
-![Basis UI](https://img.shields.io/npm/v/@zhengyishen/basis-ui?style=flat&colorA=000000&colorB=000000)
+![Basis UI](https://img.shields.io/npm/v/@basisui/ui?style=flat&colorA=000000&colorB=000000)
 ![License](https://img.shields.io/github/license/zhengyishen0/basis-ui?style=flat&colorA=000000&colorB=000000)
-![Downloads](https://img.shields.io/npm/dm/@zhengyishen/basis-ui?style=flat&colorA=000000&colorB=000000)
+![Downloads](https://img.shields.io/npm/dm/@basisui/ui?style=flat&colorA=000000&colorB=000000)
 
 ## Features
 
@@ -21,7 +21,7 @@ Beautiful, customizable Astro + Alpine.js components that you can copy and paste
 ### 1. Initialize your Astro project
 
 ```bash
-npx @zhengyishen/basis-ui@latest init
+npx @basisui/ui@latest init
 ```
 
 This will:
@@ -34,10 +34,10 @@ This will:
 
 ```bash
 # Add individual components
-npx @zhengyishen/basis-ui add button card
+npx @basisui/ui add button card
 
 # Add multiple components
-npx @zhengyishen/basis-ui add accordion dialog table
+npx @basisui/ui add accordion dialog table
 ```
 
 ### 3. Use in your Astro pages
@@ -135,7 +135,7 @@ import Card from '@/components/ui/card/Card.astro';
 Initialize your project for Basis UI components.
 
 ```bash
-npx @zhengyishen/basis-ui init
+npx @basisui/ui init
 ```
 
 Options:
@@ -146,7 +146,7 @@ Options:
 Add components to your project.
 
 ```bash
-npx @zhengyishen/basis-ui add button card
+npx @basisui/ui add button card
 ```
 
 Options:
@@ -159,8 +159,8 @@ Options:
 Check for component updates.
 
 ```bash
-npx @zhengyishen/basis-ui diff
-npx @zhengyishen/basis-ui diff button
+npx @basisui/ui diff
+npx @basisui/ui diff button
 ```
 
 Options:

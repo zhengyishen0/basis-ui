@@ -149,8 +149,8 @@ export async function init(options: InitOptions) {
         )
       );
       console.log("\nNext steps:");
-      console.log(chalk.blue("  npx basis-ui add button"));
-      console.log(chalk.blue("  npx basis-ui add card"));
+      console.log(chalk.blue("  npx basisui add button"));
+      console.log(chalk.blue("  npx basisui add card"));
       console.log("\nFor more components: https://basis.zhengyishen.com");
     } catch (error) {
       spinner.fail("Setup failed");

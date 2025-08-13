@@ -24,7 +24,7 @@ export async function diff(component: string | undefined, options: DiffOptions) 
     const configPath = path.join(cwd, 'components.json');
     if (!fs.existsSync(configPath)) {
       console.error(chalk.red('❌ Could not find components.json.'));
-      console.error('Please run ' + chalk.blue('npx basis-ui init') + ' first.');
+      console.error('Please run ' + chalk.blue('npx basisui init') + ' first.');
       process.exit(1);
     }
 
@@ -60,7 +60,7 @@ export async function diff(component: string | undefined, options: DiffOptions) 
 
       if (!localComponents.includes(component)) {
         console.log(chalk.yellow(`⚠ Component "${component}" is not installed locally.`));
-        console.log(chalk.blue(`Run: npx basis-ui add ${component}`));
+        console.log(chalk.blue(`Run: npx basisui add ${component}`));
         return;
       }
 
@@ -85,7 +85,7 @@ export async function diff(component: string | undefined, options: DiffOptions) 
         updates.forEach(name => {
           console.log(`  ${chalk.yellow('↻')} ${name}`);
         });
-        console.log(chalk.gray(`\nRun ${chalk.blue('npx basis-ui add <component>')} to update.`));
+        console.log(chalk.gray(`\nRun ${chalk.blue('npx basisui add <component>')} to update.`));
       }
     }
 

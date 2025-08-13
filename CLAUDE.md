@@ -92,9 +92,9 @@ Based on the analysis of your basis-stack components:
 
 #### **Installation Flow**
 ```bash
-npx basis-ui@latest init     # Setup project
-npx basis-ui add button card # Add components
-npx basis-ui diff           # Check updates
+npx @basisui/ui@latest init     # Setup project
+npx @basisui/ui add button card # Add components
+npx @basisui/ui diff           # Check updates
 ```
 
 #### **Init Command** (`packages/cli/src/commands/init.ts`)

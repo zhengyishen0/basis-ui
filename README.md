@@ -7,14 +7,14 @@
   <a href="https://basis.zhengyishen.com">
     <img src="https://img.shields.io/badge/Documentation-basis.zhengyishen.com-blue?style=flat&logo=astro" alt="Documentation" />
   </a>
-  <a href="https://www.npmjs.com/package/@zhengyishen/basis-ui">
-    <img src="https://img.shields.io/npm/v/@zhengyishen/basis-ui?style=flat&colorA=000000&colorB=000000" alt="Version" />
+  <a href="https://www.npmjs.com/package/@basisui/ui">
+    <img src="https://img.shields.io/npm/v/@basisui/ui?style=flat&colorA=000000&colorB=000000" alt="Version" />
   </a>
   <a href="https://github.com/zhengyishen0/basis-ui/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/zhengyishen0/basis-ui?style=flat&colorA=000000&colorB=000000" alt="License" />
   </a>
-  <a href="https://www.npmjs.com/package/@zhengyishen/basis-ui">
-    <img src="https://img.shields.io/npm/dm/@zhengyishen/basis-ui?style=flat&colorA=000000&colorB=000000" alt="Downloads" />
+  <a href="https://www.npmjs.com/package/@basisui/ui">
+    <img src="https://img.shields.io/npm/dm/@basisui/ui?style=flat&colorA=000000&colorB=000000" alt="Downloads" />
   </a>
 </div>
 
@@ -24,10 +24,10 @@
 
 ```bash
 # Initialize your Astro project
-npx @zhengyishen/basis-ui@latest init
+npx @basisui/ui@latest init
 
 # Add components
-npx @zhengyishen/basis-ui add button card accordion
+npx @basisui/ui add button card accordion
 
 # Use in your Astro pages
 ```
@@ -132,29 +132,29 @@ import Card from '@/components/ui/card/Card.astro';
 
 ### Initialize Project
 ```bash
-npx @zhengyishen/basis-ui init
+npx @basisui/ui init
 ```
 Sets up your Astro project with Alpine.js, Tailwind CSS, and utility functions.
 
 ### Add Components
 ```bash
 # Add single component
-npx @zhengyishen/basis-ui add button
+npx @basisui/ui add button
 
 # Add multiple components
-npx @zhengyishen/basis-ui add card dialog table
+npx @basisui/ui add card dialog table
 
 # Add with options
-npx @zhengyishen/basis-ui add button --overwrite --yes
+npx @basisui/ui add button --overwrite --yes
 ```
 
 ### Check Updates
 ```bash
 # Check all components
-npx @zhengyishen/basis-ui diff
+npx @basisui/ui diff
 
 # Check specific component
-npx @zhengyishen/basis-ui diff button
+npx @basisui/ui diff button
 ```
 
 ## 🏗️ Architecture
@@ -251,7 +251,7 @@ import Button from '@/components/ui/button/Button.astro';
 
 - **🏠 Homepage**: [basis.zhengyishen.com](https://basis.zhengyishen.com)
 - **📖 Documentation**: [basis.zhengyishen.com/docs](https://basis.zhengyishen.com/docs)
-- **📦 NPM Package**: [@zhengyishen/basis-ui](https://www.npmjs.com/package/@zhengyishen/basis-ui)
+- **📦 NPM Package**: [@basisui/ui](https://www.npmjs.com/package/@basisui/ui)
 - **🐛 Issues**: [GitHub Issues](https://github.com/zhengyishen0/basis-ui/issues)
 
 ## 🤝 Contributing
@@ -274,7 +274,7 @@ MIT © [Zhengyi Shen](https://github.com/zhengyishen0)
   <p>Built with ❤️ for the Astro community</p>
   <p>
     <a href="https://basis.zhengyishen.com">Documentation</a> •
-    <a href="https://www.npmjs.com/package/@zhengyishen/basis-ui">NPM</a> •
+    <a href="https://www.npmjs.com/package/@basisui/ui">NPM</a> •
     <a href="https://github.com/zhengyishen0/basis-ui/issues">Issues</a>
   </p>
 </div>

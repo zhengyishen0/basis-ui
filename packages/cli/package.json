@@ -1,10 +1,10 @@
 {
-  "name": "@zhengyishen/basis-ui",
+  "name": "@basisui/ui",
   "version": "0.1.4",
   "description": "Beautiful, customizable Astro + Alpine.js components that you can copy and paste into your apps. 59 components across 8 categories.",
   "type": "module",
   "bin": {
-    "basis-ui": "./dist/index.js"
+    "basisui": "./dist/index.js"
   },
   "files": [
     "dist",

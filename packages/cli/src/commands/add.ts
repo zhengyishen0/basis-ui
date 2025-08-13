@@ -46,7 +46,7 @@ export async function add(components: string[], options: AddOptions) {
     const configPath = path.join(cwd, 'components.json');
     if (!fs.existsSync(configPath)) {
       console.error(chalk.red('❌ Could not find components.json.'));
-      console.error('Please run ' + chalk.blue('npx basis-ui init') + ' first.');
+      console.error('Please run ' + chalk.blue('npx basisui init') + ' first.');
       process.exit(1);
     }
 
