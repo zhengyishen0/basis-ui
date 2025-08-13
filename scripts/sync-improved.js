@@ -206,9 +206,16 @@ function extractDependenciesFromContent(content, currentComponent) {
   const relativeImports = content.match(/import\s+[^'"]*\s+from\s+['"](\.\.\/[^'"]+)['"]/g);
   if (relativeImports) {
     for (const importStatement of relativeImports) {
-      const match = importStatement.match(/from\s+['"](\.\.\/([^/'"]+))/);
+      // Handle both simple and deep paths:
+      // ../popup/Popup.astro -> popup
+      // ../../overlay/popup/Popup.astro -> popup
+      let match = importStatement.match(/from\s+['"]\.\.\/([^/'"]+)\/[^/'"]+['"]/);
+      if (!match) {
+        // Try deeper path pattern
+        match = importStatement.match(/from\s+['"]\.\.\/.+\/([^/'"]+)\/[^/'"]+['"]/);
+      }
       if (match) {
-        const componentFolder = match[2];
+        const componentFolder = match[1];
         if (componentFolder && componentFolder !== currentComponent) {
           dependencies.add(componentFolder);
         }
@@ -245,20 +252,8 @@ function extractDependenciesFromContent(content, currentComponent) {
     }
   }
   
-  // Pattern 3: Component usage in template (e.g., <CheckboxIndicator>)
-  const componentUsage = content.match(/<([A-Z][a-zA-Z]+)[\s>]/g);
-  if (componentUsage) {
-    for (const usage of componentUsage) {
-      const match = usage.match(/<([A-Z][a-zA-Z]+)/);
-      if (match) {
-        const componentName = match[1];
-        const mappedName = componentNameMap.get(componentName);
-        if (mappedName && mappedName !== currentComponent) {
-          dependencies.add(mappedName);
-        }
-      }
-    }
-  }
+  // Only track actual imports, not template usage
+  // Template usage should be handled by users when they install components
   
   return Array.from(dependencies);
 }
@@ -353,7 +348,8 @@ function mapFileToComponentName(category, fileName) {
     'indicators': {
       'CheckboxIndicator.astro': 'checkbox-indicator',
       'RadioIndicator.astro': 'radio-indicator',
-      'Ellipsis.astro': 'ellipsis'
+      'Ellipsis.astro': 'ellipsis',
+      'indicators': 'checkbox-indicator' // When importing from indicators folder, default to checkbox-indicator
     },
     'interactive': {
       'CopyToClipboard.astro': 'copy-to-clipboard',

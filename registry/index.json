@@ -86,8 +86,7 @@
       "registryDependencies": [
         "utils",
         "component-variants",
-        "indicators",
-        "checkbox-indicator"
+        "indicators"
       ],
       "files": [
         {
@@ -160,7 +159,6 @@
       "registryDependencies": [
         "utils",
         "component-variants",
-        "..",
         "menu",
         "popup"
       ],
@@ -1550,8 +1548,7 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants",
-        "table"
+        "component-variants"
       ],
       "files": [
         {
