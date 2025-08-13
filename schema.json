@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://basis.zhengyishen.com/schema.json",
+  "title": "Basis UI Components Configuration Schema",
+  "description": "JSON schema for components.json configuration file used by Basis UI CLI",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "The JSON schema URL"
+    },
+    "style": {
+      "type": "string",
+      "description": "The style variant to use",
+      "enum": ["default", "new-york"],
+      "default": "default"
+    },
+    "rsc": {
+      "type": "boolean",
+      "description": "Whether to use React Server Components",
+      "default": false
+    },
+    "tsx": {
+      "type": "boolean", 
+      "description": "Whether to use TypeScript for components",
+      "default": false
+    },
+    "tailwind": {
+      "type": "object",
+      "description": "Tailwind CSS configuration",
+      "properties": {
+        "config": {
+          "type": "string",
+          "description": "Path to Tailwind config file",
+          "default": "tailwind.config.js"
+        },
+        "css": {
+          "type": "string",
+          "description": "Path to global CSS file",
+          "default": "src/styles/globals.css"
+        },
+        "baseColor": {
+          "type": "string",
+          "description": "Base color for the theme",
+          "enum": [
+            "gray",
+            "neutral", 
+            "slate",
+            "stone",
+            "zinc"
+          ],
+          "default": "slate"
+        },
+        "cssVariables": {
+          "type": "boolean",
+          "description": "Whether to use CSS variables for colors",
+          "default": true
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Prefix for Tailwind CSS classes",
+          "default": ""
+        }
+      },
+      "required": ["config", "css"],
+      "additionalProperties": false
+    },
+    "aliases": {
+      "type": "object",
+      "description": "Import aliases configuration",
+      "properties": {
+        "components": {
+          "type": "string",
+          "description": "Alias for components directory",
+          "default": "@/components"
+        },
+        "utils": {
+          "type": "string", 
+          "description": "Alias for utils directory",
+          "default": "@/lib/utils"
+        },
+        "ui": {
+          "type": "string",
+          "description": "Alias for UI components directory",
+          "default": "@/components/ui"
+        },
+        "lib": {
+          "type": "string",
+          "description": "Alias for lib directory", 
+          "default": "@/lib"
+        },
+        "hooks": {
+          "type": "string",
+          "description": "Alias for hooks directory",
+          "default": "@/hooks"
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "iconLibrary": {
+      "type": "string",
+      "description": "Icon library to use",
+      "enum": [
+        "lucide",
+        "radix-icons",
+        "phosphor-icons",
+        "tabler-icons"
+      ],
+      "default": "lucide"
+    },
+    "registryUrl": {
+      "type": "string",
+      "description": "Custom registry URL",
+      "format": "uri"
+    }
+  },
+  "required": ["style", "tailwind", "aliases"],
+  "additionalProperties": false
+}

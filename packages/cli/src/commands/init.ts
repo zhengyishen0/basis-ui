@@ -1,10 +1,10 @@
-import fs from 'fs-extra';
-import path from 'path';
-import prompts from 'prompts';
-import chalk from 'chalk';
-import ora from 'ora';
-import { execa } from 'execa';
-import { z } from 'zod';
+import fs from "fs-extra";
+import path from "path";
+import prompts from "prompts";
+import chalk from "chalk";
+import ora from "ora";
+import { execa } from "execa";
+import { z } from "zod";
 
 const initOptionsSchema = z.object({
   cwd: z.string(),
@@ -19,84 +19,94 @@ export async function init(options: InitOptions) {
     const cwd = path.resolve(opts.cwd);
 
     // Check if this is an Astro project
-    const astroConfig = path.join(cwd, 'astro.config.js');
-    const astroConfigMjs = path.join(cwd, 'astro.config.mjs');
-    const astroConfigTs = path.join(cwd, 'astro.config.ts');
-    
-    if (!fs.existsSync(astroConfig) && !fs.existsSync(astroConfigMjs) && !fs.existsSync(astroConfigTs)) {
-      console.error(chalk.red('❌ This does not appear to be an Astro project.'));
-      console.error('Please run this command in an Astro project directory.');
+    const astroConfig = path.join(cwd, "astro.config.js");
+    const astroConfigMjs = path.join(cwd, "astro.config.mjs");
+    const astroConfigTs = path.join(cwd, "astro.config.ts");
+
+    if (
+      !fs.existsSync(astroConfig) &&
+      !fs.existsSync(astroConfigMjs) &&
+      !fs.existsSync(astroConfigTs)
+    ) {
+      console.error(
+        chalk.red("❌ This does not appear to be an Astro project.")
+      );
+      console.error("Please run this command in an Astro project directory.");
       process.exit(1);
     }
 
-    console.log(chalk.blue('🚀 Welcome to Basis UI!\n'));
+    console.log(chalk.blue("🚀 Welcome to Basis UI!\n"));
 
     // Configuration options
     const questions = [
       {
-        type: 'select',
-        name: 'style',
-        message: 'Which style would you like to use?',
+        type: "select",
+        name: "style",
+        message: "Which style would you like to use?",
         choices: [
-          { title: 'Default', value: 'default', description: 'Clean and minimal design' },
+          {
+            title: "Default",
+            value: "default",
+            description: "Clean and minimal design",
+          },
         ],
         initial: 0,
       },
       {
-        type: 'text',
-        name: 'tailwindConfig',
-        message: 'Where is your tailwind.config file?',
-        initial: 'tailwind.config.js',
+        type: "text",
+        name: "tailwindConfig",
+        message: "Where is your tailwind.config file?",
+        initial: "tailwind.config.js",
       },
       {
-        type: 'text',
-        name: 'tailwindCss',
-        message: 'Where is your global CSS file?',
-        initial: 'src/styles/global.css',
+        type: "text",
+        name: "tailwindCss",
+        message: "Where is your global CSS file?",
+        initial: "src/styles/global.css",
       },
       {
-        type: 'confirm',
-        name: 'rsc',
-        message: 'Would you like to use Alpine.js for reactivity?',
+        type: "confirm",
+        name: "rsc",
+        message: "Would you like to use Alpine.js for reactivity?",
         initial: true,
       },
       {
-        type: 'text',
-        name: 'componentsPath',
-        message: 'Configure the import alias for components?',
-        initial: '@/components',
+        type: "text",
+        name: "componentsPath",
+        message: "Configure the import alias for components?",
+        initial: "@/components",
       },
       {
-        type: 'text',
-        name: 'utilsPath',
-        message: 'Configure the import alias for utils?',
-        initial: '@/lib/utils',
+        type: "text",
+        name: "utilsPath",
+        message: "Configure the import alias for utils?",
+        initial: "@/lib/utils",
       },
     ];
 
-    const config = opts.yes 
+    const config = opts.yes
       ? {
-          style: 'default',
-          tailwindConfig: 'tailwind.config.js',
-          tailwindCss: 'src/styles/global.css',
+          style: "default",
+          tailwindConfig: "tailwind.config.js",
+          tailwindCss: "src/styles/global.css",
           rsc: true,
-          componentsPath: '@/components',
-          utilsPath: '@/lib/utils',
+          componentsPath: "@/components",
+          utilsPath: "@/lib/utils",
         }
       : await prompts(questions);
 
     if (!config.style) {
-      console.log(chalk.gray('Operation cancelled.'));
+      console.log(chalk.gray("Operation cancelled."));
       process.exit(0);
     }
 
-    const spinner = ora('Setting up your project...').start();
+    const spinner = ora("Setting up your project...").start();
 
     try {
       // Create directories
-      await fs.ensureDir(path.join(cwd, 'src/components/ui'));
-      await fs.ensureDir(path.join(cwd, 'src/lib'));
-      await fs.ensureDir(path.join(cwd, 'src/styles'));
+      await fs.ensureDir(path.join(cwd, "src/components/ui"));
+      await fs.ensureDir(path.join(cwd, "src/lib"));
+      await fs.ensureDir(path.join(cwd, "src/styles"));
 
       // Create/update tsconfig.json paths
       await updateTsConfig(cwd, config);
@@ -114,7 +124,7 @@ export async function init(options: InitOptions) {
 
       // Create config file
       const basisConfig = {
-        $schema: 'https://basis-ui.com/schema.json',
+        $schema: "https://basis.zhengyishen.com/schema.json",
         style: config.style,
         tailwind: {
           config: config.tailwindConfig,
@@ -127,45 +137,49 @@ export async function init(options: InitOptions) {
         },
       };
 
-      await fs.writeJson(path.join(cwd, 'components.json'), basisConfig, { spaces: 2 });
+      await fs.writeJson(path.join(cwd, "components.json"), basisConfig, {
+        spaces: 2,
+      });
 
-      spinner.succeed('Project setup complete!');
+      spinner.succeed("Project setup complete!");
 
-      console.log(chalk.green('\n✅ Success! Your project is now ready for Basis UI components.'));
-      console.log('\nNext steps:');
-      console.log(chalk.blue('  npx basis-ui add button'));
-      console.log(chalk.blue('  npx basis-ui add card'));
-      console.log('\nFor more components: https://basis-ui.com');
-
+      console.log(
+        chalk.green(
+          "\n✅ Success! Your project is now ready for Basis UI components."
+        )
+      );
+      console.log("\nNext steps:");
+      console.log(chalk.blue("  npx basis-ui add button"));
+      console.log(chalk.blue("  npx basis-ui add card"));
+      console.log("\nFor more components: https://basis.zhengyishen.com");
     } catch (error) {
-      spinner.fail('Setup failed');
+      spinner.fail("Setup failed");
       throw error;
     }
-
   } catch (error) {
-    console.error(chalk.red('❌ Initialization failed:'), error);
+    console.error(chalk.red("❌ Initialization failed:"), error);
     process.exit(1);
   }
 }
 
 async function updateTsConfig(cwd: string, config: any) {
-  const tsConfigPath = path.join(cwd, 'tsconfig.json');
-  
+  const tsConfigPath = path.join(cwd, "tsconfig.json");
+
   if (fs.existsSync(tsConfigPath)) {
     const tsConfig = await fs.readJson(tsConfigPath);
-    
+
     if (!tsConfig.compilerOptions) {
       tsConfig.compilerOptions = {};
     }
-    
+
     if (!tsConfig.compilerOptions.paths) {
       tsConfig.compilerOptions.paths = {};
     }
 
     // Add path mappings
-    tsConfig.compilerOptions.paths['@/components/*'] = ['./src/components/*'];
-    tsConfig.compilerOptions.paths['@/lib/*'] = ['./src/lib/*'];
-    tsConfig.compilerOptions.paths['@/styles/*'] = ['./src/styles/*'];
+    tsConfig.compilerOptions.paths["@/components/*"] = ["./src/components/*"];
+    tsConfig.compilerOptions.paths["@/lib/*"] = ["./src/lib/*"];
+    tsConfig.compilerOptions.paths["@/styles/*"] = ["./src/styles/*"];
 
     await fs.writeJson(tsConfigPath, tsConfig, { spaces: 2 });
   }
@@ -173,23 +187,36 @@ async function updateTsConfig(cwd: string, config: any) {
 
 async function setupTailwind(cwd: string, config: any) {
   const tailwindConfigPath = path.join(cwd, config.tailwindConfig);
-  
+
   // Check if Tailwind is already installed
-  const packageJsonPath = path.join(cwd, 'package.json');
+  const packageJsonPath = path.join(cwd, "package.json");
   const packageJson = await fs.readJson(packageJsonPath);
-  
-  if (!packageJson.dependencies?.tailwindcss && !packageJson.devDependencies?.tailwindcss) {
+
+  if (
+    !packageJson.dependencies?.tailwindcss &&
+    !packageJson.devDependencies?.tailwindcss
+  ) {
     // Install Tailwind CSS
-    await execa('npm', ['install', '-D', 'tailwindcss', '@tailwindcss/typography', 'autoprefixer'], { cwd });
+    await execa(
+      "npm",
+      [
+        "install",
+        "-D",
+        "tailwindcss",
+        "@tailwindcss/typography",
+        "autoprefixer",
+      ],
+      { cwd }
+    );
   }
 
   // Update Tailwind config
   if (fs.existsSync(tailwindConfigPath)) {
     // Read existing config and update it
-    let configContent = await fs.readFile(tailwindConfigPath, 'utf-8');
-    
+    let configContent = await fs.readFile(tailwindConfigPath, "utf-8");
+
     // Add basis-ui theme if not present
-    if (!configContent.includes('basis-ui')) {
+    if (!configContent.includes("basis-ui")) {
       // This is a simplified version - in a real implementation, you'd parse and merge properly
       const themeAddition = `
 // Basis UI theme
@@ -237,15 +264,19 @@ module.exports = {
     },
   },
 };`;
-      
-      console.log(chalk.yellow('⚠ Please manually update your Tailwind config with Basis UI theme colors.'));
+
+      console.log(
+        chalk.yellow(
+          "⚠ Please manually update your Tailwind config with Basis UI theme colors."
+        )
+      );
     }
   }
 
   // Add CSS variables
   const cssPath = path.join(cwd, config.tailwindCss);
   await fs.ensureDir(path.dirname(cssPath));
-  
+
   const cssContent = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -309,36 +340,37 @@ module.exports = {
   if (!fs.existsSync(cssPath)) {
     await fs.writeFile(cssPath, cssContent);
   } else {
-    const existingCss = await fs.readFile(cssPath, 'utf-8');
-    if (!existingCss.includes('--background')) {
-      await fs.appendFile(cssPath, '\n\n' + cssContent);
+    const existingCss = await fs.readFile(cssPath, "utf-8");
+    if (!existingCss.includes("--background")) {
+      await fs.appendFile(cssPath, "\n\n" + cssContent);
     }
   }
 }
 
 async function setupAlpine(cwd: string) {
-  const packageJsonPath = path.join(cwd, 'package.json');
+  const packageJsonPath = path.join(cwd, "package.json");
   const packageJson = await fs.readJson(packageJsonPath);
-  
+
   const alpinePackages = [
-    'alpinejs',
-    '@alpinejs/collapse',
-    '@alpinejs/focus',
-    '@alpinejs/intersect',
-    '@alpinejs/mask',
-    '@alpinejs/persist',
-    '@alpinejs/sort',
-    '@alpinejs/anchor',
-    '@alpinejs/morph',
-    '@alpinejs/resize'
+    "alpinejs",
+    "@alpinejs/collapse",
+    "@alpinejs/focus",
+    "@alpinejs/intersect",
+    "@alpinejs/mask",
+    "@alpinejs/persist",
+    "@alpinejs/sort",
+    "@alpinejs/anchor",
+    "@alpinejs/morph",
+    "@alpinejs/resize",
   ];
 
-  const missingPackages = alpinePackages.filter(pkg => 
-    !packageJson.dependencies?.[pkg] && !packageJson.devDependencies?.[pkg]
+  const missingPackages = alpinePackages.filter(
+    (pkg) =>
+      !packageJson.dependencies?.[pkg] && !packageJson.devDependencies?.[pkg]
   );
 
   if (missingPackages.length > 0) {
-    await execa('npm', ['install', ...missingPackages], { cwd });
+    await execa("npm", ["install", ...missingPackages], { cwd });
   }
 }
 
@@ -350,9 +382,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }`;
 
-  const utilsPath = path.join(cwd, 'src/lib/utils.ts');
+  const utilsPath = path.join(cwd, "src/lib/utils.ts");
   await fs.writeFile(utilsPath, utilsContent);
 
   // Install dependencies
-  await execa('npm', ['install', 'clsx', 'tailwind-merge'], { cwd });
+  await execa("npm", ["install", "clsx", "tailwind-merge"], { cwd });
 }

@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://basis.zhengyishen.com/registry-schema.json",
+  "title": "Basis UI Registry Schema",
+  "description": "JSON schema for Basis UI component registry files",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "The JSON schema URL"
+    },
+    "version": {
+      "type": "string",
+      "description": "Registry version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "components": {
+      "type": "object",
+      "description": "Available components",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "$ref": "#/definitions/Component"
+        }
+      },
+      "additionalProperties": false
+    },
+    "lib": {
+      "type": "object",
+      "description": "Library utilities and helpers",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "$ref": "#/definitions/LibraryItem"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["version", "components"],
+  "additionalProperties": false,
+  "definitions": {
+    "Component": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Component name",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "category": {
+          "type": "string",
+          "description": "Component category",
+          "enum": [
+            "forms",
+            "display", 
+            "layout",
+            "navigation",
+            "overlay",
+            "feedback",
+            "data",
+            "indicators",
+            "interactive"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "description": "Component description"
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "NPM package dependencies",
+          "items": {
+            "type": "string",
+            "pattern": "^[@a-z0-9-]+(/[a-z0-9-]+)?@\\^?[0-9]+\\.[0-9]+\\.[0-9]+$"
+          }
+        },
+        "registryDependencies": {
+          "type": "array",
+          "description": "Registry dependencies (other components/utilities)",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        },
+        "files": {
+          "type": "array",
+          "description": "Component files",
+          "items": {
+            "$ref": "#/definitions/File"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["name", "category", "description", "dependencies", "registryDependencies", "files"],
+      "additionalProperties": false
+    },
+    "LibraryItem": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Library item name",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Library item description"
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "NPM package dependencies",
+          "items": {
+            "type": "string",
+            "pattern": "^[@a-z0-9-]+(/[a-z0-9-]+)?@\\^?[0-9]+\\.[0-9]+\\.[0-9]+$"
+          },
+          "default": []
+        },
+        "registryDependencies": {
+          "type": "array",
+          "description": "Registry dependencies",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "default": []
+        },
+        "files": {
+          "type": "array",
+          "description": "Library files",
+          "items": {
+            "$ref": "#/definitions/File"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["name", "description", "files"],
+      "additionalProperties": false
+    },
+    "File": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "File path relative to registry root",
+          "pattern": "^(components|lib)/"
+        },
+        "type": {
+          "type": "string",
+          "description": "File type",
+          "enum": ["component", "store", "lib"]
+        }
+      },
+      "required": ["path", "type"],
+      "additionalProperties": false
+    }
+  }
+}
