@@ -29,5 +29,8 @@
     "tailwind"
   ],
   "author": "Zhengyi Shen",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "glob": "^11.0.3"
+  }
 }

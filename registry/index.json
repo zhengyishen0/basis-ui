@@ -9,9 +9,7 @@
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@iconify-json/lucide@^1.2.62",
-        "astro-icon@^1.1.5"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
@@ -21,18 +19,21 @@
         {
           "path": "components/button/Button.astro",
           "type": "component"
+        },
+        {
+          "path": "components/button/index.ts",
+          "type": "index"
         }
       ]
     },
     "text-input": {
       "name": "text-input",
       "category": "forms",
-      "description": "Input field with validation and Alpine.js integration",
+      "description": "text input component for forms",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@alpinejs/mask@^3.14.9"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
@@ -42,13 +43,17 @@
         {
           "path": "components/text-input/TextInput.astro",
           "type": "component"
+        },
+        {
+          "path": "components/text-input/index.ts",
+          "type": "index"
         }
       ]
     },
     "textarea": {
       "name": "textarea",
       "category": "forms",
-      "description": "Multi-line text input with auto-resize",
+      "description": "textarea component for forms",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -62,13 +67,17 @@
         {
           "path": "components/textarea/Textarea.astro",
           "type": "component"
+        },
+        {
+          "path": "components/textarea/index.ts",
+          "type": "index"
         }
       ]
     },
     "checkbox": {
       "name": "checkbox",
       "category": "forms",
-      "description": "Checkbox input with custom styling",
+      "description": "checkbox component for forms",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -76,19 +85,25 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "indicators",
+        "checkbox-indicator"
       ],
       "files": [
         {
           "path": "components/checkbox/Checkbox.astro",
           "type": "component"
+        },
+        {
+          "path": "components/checkbox/index.ts",
+          "type": "index"
         }
       ]
     },
     "slider": {
       "name": "slider",
       "category": "forms",
-      "description": "Range slider with customizable styling",
+      "description": "slider component for forms",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -102,13 +117,17 @@
         {
           "path": "components/slider/Slider.astro",
           "type": "component"
+        },
+        {
+          "path": "components/slider/index.ts",
+          "type": "index"
         }
       ]
     },
     "rating": {
       "name": "rating",
       "category": "forms",
-      "description": "Star rating component with hover effects",
+      "description": "rating component for forms",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -122,13 +141,17 @@
         {
           "path": "components/rating/Rating.astro",
           "type": "component"
+        },
+        {
+          "path": "components/rating/index.ts",
+          "type": "index"
         }
       ]
     },
     "select": {
       "name": "select",
       "category": "forms",
-      "description": "Dropdown select with search and multi-select support",
+      "description": "select component for forms",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -136,7 +159,10 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "..",
+        "menu",
+        "popup"
       ],
       "files": [
         {
@@ -150,13 +176,17 @@
         {
           "path": "components/select/SelectItems.astro",
           "type": "component"
+        },
+        {
+          "path": "components/select/index.ts",
+          "type": "index"
         }
       ]
     },
     "radio-group": {
       "name": "radio-group",
       "category": "forms",
-      "description": "Radio button group with Alpine.js state management",
+      "description": "radio group component for forms",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -164,11 +194,16 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "radio-indicator"
       ],
       "files": [
         {
           "path": "components/radio-group/RadioGroup.astro",
+          "type": "component"
+        },
+        {
+          "path": "components/radio-group/RadioGroupDescription.astro",
           "type": "component"
         },
         {
@@ -184,8 +219,8 @@
           "type": "component"
         },
         {
-          "path": "components/radio-group/RadioGroupDescription.astro",
-          "type": "component"
+          "path": "components/radio-group/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -196,22 +231,15 @@
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@iconify-json/lucide@^1.2.62",
-        "astro-icon@^1.1.5"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
-        "component-variants",
-        "button"
+        "component-variants"
       ],
       "files": [
         {
           "path": "components/card/Card.astro",
-          "type": "component"
-        },
-        {
-          "path": "components/card/CardHeader.astro",
           "type": "component"
         },
         {
@@ -221,6 +249,14 @@
         {
           "path": "components/card/CardFooter.astro",
           "type": "component"
+        },
+        {
+          "path": "components/card/CardHeader.astro",
+          "type": "component"
+        },
+        {
+          "path": "components/card/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -231,15 +267,12 @@
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@alpinejs/collapse@^3.14.9",
-        "@iconify-json/lucide@^1.2.62",
-        "astro-icon@^1.1.5"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
         "component-variants",
-        "button"
+        "text"
       ],
       "files": [
         {
@@ -261,19 +294,21 @@
         {
           "path": "components/accordion/AccordionTrigger.astro",
           "type": "component"
+        },
+        {
+          "path": "components/accordion/index.ts",
+          "type": "index"
         }
       ]
     },
     "avatar": {
       "name": "avatar",
       "category": "display",
-      "description": "User avatar with fallback text and image support",
+      "description": "avatar component for display",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@iconify-json/lucide@^1.2.62",
-        "astro-icon@^1.1.5"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
@@ -283,13 +318,17 @@
         {
           "path": "components/avatar/Avatar.astro",
           "type": "component"
+        },
+        {
+          "path": "components/avatar/index.ts",
+          "type": "index"
         }
       ]
     },
     "calendar": {
       "name": "calendar",
       "category": "display",
-      "description": "Interactive calendar component",
+      "description": "calendar component for display",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -303,34 +342,17 @@
         {
           "path": "components/calendar/Calendar.astro",
           "type": "component"
+        },
+        {
+          "path": "components/calendar/index.ts",
+          "type": "index"
         }
       ]
     },
     "carousel": {
       "name": "carousel",
       "category": "display",
-      "description": "Image and content carousel with navigation",
-      "dependencies": [
-        "class-variance-authority@^0.7.1",
-        "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@alpinejs/intersect@^3.14.9"
-      ],
-      "registryDependencies": [
-        "utils",
-        "component-variants"
-      ],
-      "files": [
-        {
-          "path": "components/carousel/Carousel.astro",
-          "type": "component"
-        }
-      ]
-    },
-    "code": {
-      "name": "code",
-      "category": "display",
-      "description": "Syntax highlighted code display",
+      "description": "carousel component for display",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -342,15 +364,44 @@
       ],
       "files": [
         {
+          "path": "components/carousel/Carousel.astro",
+          "type": "component"
+        },
+        {
+          "path": "components/carousel/index.ts",
+          "type": "index"
+        }
+      ]
+    },
+    "code": {
+      "name": "code",
+      "category": "display",
+      "description": "code component for display",
+      "dependencies": [
+        "class-variance-authority@^0.7.1",
+        "clsx@^2.1.1",
+        "tailwind-merge@^3.3.1"
+      ],
+      "registryDependencies": [
+        "utils",
+        "component-variants",
+        "copy-to-clipboard"
+      ],
+      "files": [
+        {
           "path": "components/code/Code.astro",
           "type": "component"
+        },
+        {
+          "path": "components/code/index.ts",
+          "type": "index"
         }
       ]
     },
     "image": {
       "name": "image",
       "category": "display",
-      "description": "Responsive image with lazy loading",
+      "description": "image component for display",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -364,13 +415,17 @@
         {
           "path": "components/image/Image.astro",
           "type": "component"
+        },
+        {
+          "path": "components/image/index.ts",
+          "type": "index"
         }
       ]
     },
     "navbar": {
       "name": "navbar",
       "category": "display",
-      "description": "Navigation bar with responsive design",
+      "description": "navbar component for display",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -384,13 +439,17 @@
         {
           "path": "components/navbar/Navbar.astro",
           "type": "component"
+        },
+        {
+          "path": "components/navbar/index.ts",
+          "type": "index"
         }
       ]
     },
     "table-of-contents": {
       "name": "table-of-contents",
       "category": "display",
-      "description": "Auto-generated table of contents",
+      "description": "table of-contents component for display",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -404,13 +463,17 @@
         {
           "path": "components/table-of-contents/TableOfContents.astro",
           "type": "component"
+        },
+        {
+          "path": "components/table-of-contents/index.ts",
+          "type": "index"
         }
       ]
     },
     "text": {
       "name": "text",
       "category": "display",
-      "description": "Typography component with semantic variants",
+      "description": "text component for display",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -424,13 +487,17 @@
         {
           "path": "components/text/Text.astro",
           "type": "component"
+        },
+        {
+          "path": "components/text/index.ts",
+          "type": "index"
         }
       ]
     },
     "video-player": {
       "name": "video-player",
       "category": "display",
-      "description": "video-player component for display",
+      "description": "video player component for display",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -438,19 +505,24 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "slider"
       ],
       "files": [
         {
           "path": "components/video-player/VideoPlayer.astro",
           "type": "component"
+        },
+        {
+          "path": "components/video-player/index.ts",
+          "type": "index"
         }
       ]
     },
     "column": {
       "name": "column",
       "category": "layout",
-      "description": "Flexible column layout component",
+      "description": "column component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -464,13 +536,17 @@
         {
           "path": "components/column/Column.astro",
           "type": "component"
+        },
+        {
+          "path": "components/column/index.ts",
+          "type": "index"
         }
       ]
     },
     "row": {
       "name": "row",
       "category": "layout",
-      "description": "Horizontal row layout with alignment options",
+      "description": "row component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -484,13 +560,17 @@
         {
           "path": "components/row/Row.astro",
           "type": "component"
+        },
+        {
+          "path": "components/row/index.ts",
+          "type": "index"
         }
       ]
     },
     "page": {
       "name": "page",
       "category": "layout",
-      "description": "Main page container with responsive padding",
+      "description": "page component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -504,13 +584,17 @@
         {
           "path": "components/page/Page.astro",
           "type": "component"
+        },
+        {
+          "path": "components/page/index.ts",
+          "type": "index"
         }
       ]
     },
     "grid": {
       "name": "grid",
       "category": "layout",
-      "description": "CSS Grid layout with responsive columns",
+      "description": "grid component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -524,13 +608,17 @@
         {
           "path": "components/grid/Grid.astro",
           "type": "component"
+        },
+        {
+          "path": "components/grid/index.ts",
+          "type": "index"
         }
       ]
     },
     "grid-items": {
       "name": "grid-items",
       "category": "layout",
-      "description": "grid-items component for layout",
+      "description": "grid items component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -544,13 +632,17 @@
         {
           "path": "components/grid-items/GridItems.astro",
           "type": "component"
+        },
+        {
+          "path": "components/grid-items/index.ts",
+          "type": "index"
         }
       ]
     },
     "list": {
       "name": "list",
       "category": "layout",
-      "description": "Vertical list with gap control",
+      "description": "list component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -564,13 +656,17 @@
         {
           "path": "components/list/List.astro",
           "type": "component"
+        },
+        {
+          "path": "components/list/index.ts",
+          "type": "index"
         }
       ]
     },
     "list-items": {
       "name": "list-items",
       "category": "layout",
-      "description": "list-items component for layout",
+      "description": "list items component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -584,13 +680,17 @@
         {
           "path": "components/list-items/ListItems.astro",
           "type": "component"
+        },
+        {
+          "path": "components/list-items/index.ts",
+          "type": "index"
         }
       ]
     },
     "inline": {
       "name": "inline",
       "category": "layout",
-      "description": "Horizontal inline layout",
+      "description": "inline component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -604,13 +704,17 @@
         {
           "path": "components/inline/Inline.astro",
           "type": "component"
+        },
+        {
+          "path": "components/inline/index.ts",
+          "type": "index"
         }
       ]
     },
     "divider": {
       "name": "divider",
       "category": "layout",
-      "description": "Visual separator line",
+      "description": "divider component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -624,13 +728,17 @@
         {
           "path": "components/divider/Divider.astro",
           "type": "component"
+        },
+        {
+          "path": "components/divider/index.ts",
+          "type": "index"
         }
       ]
     },
     "spacer": {
       "name": "spacer",
       "category": "layout",
-      "description": "Empty space component for layout",
+      "description": "spacer component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -644,13 +752,17 @@
         {
           "path": "components/spacer/Spacer.astro",
           "type": "component"
+        },
+        {
+          "path": "components/spacer/index.ts",
+          "type": "index"
         }
       ]
     },
     "section": {
       "name": "section",
       "category": "layout",
-      "description": "Content section with semantic styling",
+      "description": "section component for layout",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -664,6 +776,10 @@
         {
           "path": "components/section/Section.astro",
           "type": "component"
+        },
+        {
+          "path": "components/section/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -684,6 +800,10 @@
         {
           "path": "components/conditional/Conditional.astro",
           "type": "component"
+        },
+        {
+          "path": "components/conditional/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -694,13 +814,13 @@
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@alpinejs/anchor@^3.14.9"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
         "component-variants",
-        "button"
+        "card",
+        "divider"
       ],
       "files": [
         {
@@ -718,13 +838,17 @@
         {
           "path": "components/tabs/TabsTrigger.astro",
           "type": "component"
+        },
+        {
+          "path": "components/tabs/index.ts",
+          "type": "index"
         }
       ]
     },
     "breadcrumbs": {
       "name": "breadcrumbs",
       "category": "navigation",
-      "description": "Navigation breadcrumb trail",
+      "description": "breadcrumbs component for navigation",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -750,13 +874,17 @@
         {
           "path": "components/breadcrumbs/SmartBreadcrumb.astro",
           "type": "component"
+        },
+        {
+          "path": "components/breadcrumbs/index.ts",
+          "type": "index"
         }
       ]
     },
     "pagination": {
       "name": "pagination",
       "category": "navigation",
-      "description": "Page navigation with numbered pages",
+      "description": "pagination component for navigation",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -786,13 +914,17 @@
         {
           "path": "components/pagination/PaginationPrevious.astro",
           "type": "component"
+        },
+        {
+          "path": "components/pagination/index.ts",
+          "type": "index"
         }
       ]
     },
     "navigation-menu": {
       "name": "navigation-menu",
       "category": "navigation",
-      "description": "Hierarchical navigation menu",
+      "description": "navigation menu component for navigation",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -800,8 +932,7 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants",
-        "button"
+        "component-variants"
       ],
       "files": [
         {
@@ -839,6 +970,10 @@
         {
           "path": "components/navigation-menu/NavigationMenuTrigger.astro",
           "type": "component"
+        },
+        {
+          "path": "components/navigation-menu/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -854,8 +989,7 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants",
-        "button"
+        "component-variants"
       ],
       "files": [
         {
@@ -877,6 +1011,10 @@
         {
           "path": "components/dialog/DialogTrigger.astro",
           "type": "component"
+        },
+        {
+          "path": "components/dialog/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -887,7 +1025,8 @@
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1"
+        "tailwind-merge@^3.3.1",
+        "@alpinejs/focus@^3.14.9"
       ],
       "registryDependencies": [
         "utils",
@@ -905,66 +1044,88 @@
         {
           "path": "components/popup/PopupTrigger.astro",
           "type": "component"
+        },
+        {
+          "path": "components/popup/index.ts",
+          "type": "index"
         }
       ]
     },
     "tooltip": {
       "name": "tooltip",
       "category": "overlay",
-      "description": "Contextual tooltip on hover",
+      "description": "tooltip component for overlay",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1"
+        "tailwind-merge@^3.3.1",
+        "@alpinejs/focus@^3.14.9"
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "popup"
       ],
       "files": [
         {
           "path": "components/tooltip/Tooltip.astro",
           "type": "component"
+        },
+        {
+          "path": "components/tooltip/index.ts",
+          "type": "index"
         }
       ]
     },
     "hover-card": {
       "name": "hover-card",
       "category": "overlay",
-      "description": "Rich content card on hover",
+      "description": "hover card component for overlay",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1"
+        "tailwind-merge@^3.3.1",
+        "@alpinejs/focus@^3.14.9"
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "popup"
       ],
       "files": [
         {
           "path": "components/hover-card/HoverCard.astro",
           "type": "component"
+        },
+        {
+          "path": "components/hover-card/index.ts",
+          "type": "index"
         }
       ]
     },
     "context-menu": {
       "name": "context-menu",
       "category": "overlay",
-      "description": "Right-click context menu",
+      "description": "context menu component for overlay",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1"
+        "tailwind-merge@^3.3.1",
+        "@alpinejs/focus@^3.14.9"
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "popup"
       ],
       "files": [
         {
           "path": "components/context-menu/ContextMenu.astro",
           "type": "component"
+        },
+        {
+          "path": "components/context-menu/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -980,12 +1141,17 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "popup"
       ],
       "files": [
         {
           "path": "components/dropdown-menu/DropdownMenu.astro",
           "type": "component"
+        },
+        {
+          "path": "components/dropdown-menu/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -996,16 +1162,22 @@
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1"
+        "tailwind-merge@^3.3.1",
+        "@alpinejs/focus@^3.14.9"
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "popup"
       ],
       "files": [
         {
           "path": "components/menubar/MenuBar.astro",
           "type": "component"
+        },
+        {
+          "path": "components/menubar/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -1022,7 +1194,8 @@
       "registryDependencies": [
         "utils",
         "component-variants",
-        "text-input"
+        "menu",
+        "dialog"
       ],
       "files": [
         {
@@ -1044,6 +1217,10 @@
         {
           "path": "components/command/CommandItems.astro",
           "type": "component"
+        },
+        {
+          "path": "components/command/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -1054,11 +1231,13 @@
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1"
+        "tailwind-merge@^3.3.1",
+        "@alpinejs/focus@^3.14.9"
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "empty"
       ],
       "files": [
         {
@@ -1100,35 +1279,42 @@
         {
           "path": "components/menu/MenuSubTrigger.astro",
           "type": "component"
+        },
+        {
+          "path": "components/menu/index.ts",
+          "type": "index"
         }
       ]
     },
     "alert": {
       "name": "alert",
       "category": "feedback",
-      "description": "Alert message with semantic colors",
+      "description": "alert component for feedback",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@iconify-json/lucide@^1.2.62",
-        "astro-icon@^1.1.5"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
-        "component-variants"
+        "component-variants",
+        "text"
       ],
       "files": [
         {
           "path": "components/alert/Alert.astro",
           "type": "component"
+        },
+        {
+          "path": "components/alert/index.ts",
+          "type": "index"
         }
       ]
     },
     "badge": {
       "name": "badge",
       "category": "feedback",
-      "description": "Small status indicator",
+      "description": "badge component for feedback",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1142,13 +1328,17 @@
         {
           "path": "components/badge/Badge.astro",
           "type": "component"
+        },
+        {
+          "path": "components/badge/index.ts",
+          "type": "index"
         }
       ]
     },
     "empty": {
       "name": "empty",
       "category": "feedback",
-      "description": "Empty state placeholder",
+      "description": "empty component for feedback",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1162,13 +1352,17 @@
         {
           "path": "components/empty/Empty.astro",
           "type": "component"
+        },
+        {
+          "path": "components/empty/index.ts",
+          "type": "index"
         }
       ]
     },
     "error": {
       "name": "error",
       "category": "feedback",
-      "description": "Error message display",
+      "description": "error component for feedback",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1182,13 +1376,17 @@
         {
           "path": "components/error/Error.astro",
           "type": "component"
+        },
+        {
+          "path": "components/error/index.ts",
+          "type": "index"
         }
       ]
     },
     "loading": {
       "name": "loading",
       "category": "feedback",
-      "description": "Loading indicator with animations",
+      "description": "loading component for feedback",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1202,13 +1400,17 @@
         {
           "path": "components/loading/Loading.astro",
           "type": "component"
+        },
+        {
+          "path": "components/loading/index.ts",
+          "type": "index"
         }
       ]
     },
     "progress": {
       "name": "progress",
       "category": "feedback",
-      "description": "Progress bar with percentage",
+      "description": "progress component for feedback",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1222,13 +1424,17 @@
         {
           "path": "components/progress/Progress.astro",
           "type": "component"
+        },
+        {
+          "path": "components/progress/index.ts",
+          "type": "index"
         }
       ]
     },
     "toast": {
       "name": "toast",
       "category": "feedback",
-      "description": "Temporary notification message",
+      "description": "toast component for feedback",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1242,24 +1448,25 @@
         {
           "path": "components/toast/Toast.astro",
           "type": "component"
+        },
+        {
+          "path": "components/toast/index.ts",
+          "type": "index"
         }
       ]
     },
     "banner": {
       "name": "banner",
       "category": "feedback",
-      "description": "Full-width promotional banner",
+      "description": "banner component for feedback",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@iconify-json/lucide@^1.2.62",
-        "astro-icon@^1.1.5"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
-        "component-variants",
-        "button"
+        "component-variants"
       ],
       "files": [
         {
@@ -1281,6 +1488,10 @@
         {
           "path": "components/banner/BannerTitle.astro",
           "type": "component"
+        },
+        {
+          "path": "components/banner/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -1295,9 +1506,7 @@
       ],
       "registryDependencies": [
         "utils",
-        "component-variants",
-        "checkbox",
-        "button"
+        "component-variants"
       ],
       "files": [
         {
@@ -1323,6 +1532,10 @@
         {
           "path": "components/table/TableRow.astro",
           "type": "component"
+        },
+        {
+          "path": "components/table/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -1333,18 +1546,12 @@
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
-        "tailwind-merge@^3.3.1",
-        "@alpinejs/sort@^3.14.9",
-        "@alpinejs/persist@^3.14.9",
-        "@supabase/supabase-js@^2.51.0"
+        "tailwind-merge@^3.3.1"
       ],
       "registryDependencies": [
         "utils",
         "component-variants",
-        "table",
-        "button",
-        "text-input",
-        "pagination"
+        "table"
       ],
       "files": [
         {
@@ -1360,6 +1567,10 @@
           "type": "component"
         },
         {
+          "path": "components/data-table/index.ts",
+          "type": "index"
+        },
+        {
           "path": "components/data-table/table-store.js",
           "type": "store"
         }
@@ -1368,7 +1579,7 @@
     "checkbox-indicator": {
       "name": "checkbox-indicator",
       "category": "indicators",
-      "description": "checkbox-indicator component for indicators",
+      "description": "checkbox indicator component for indicators",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1382,13 +1593,17 @@
         {
           "path": "components/checkbox-indicator/CheckboxIndicator.astro",
           "type": "component"
+        },
+        {
+          "path": "components/checkbox-indicator/index.ts",
+          "type": "index"
         }
       ]
     },
     "radio-indicator": {
       "name": "radio-indicator",
       "category": "indicators",
-      "description": "radio-indicator component for indicators",
+      "description": "radio indicator component for indicators",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1402,6 +1617,10 @@
         {
           "path": "components/radio-indicator/RadioIndicator.astro",
           "type": "component"
+        },
+        {
+          "path": "components/radio-indicator/index.ts",
+          "type": "index"
         }
       ]
     },
@@ -1422,13 +1641,17 @@
         {
           "path": "components/ellipsis/Ellipsis.astro",
           "type": "component"
+        },
+        {
+          "path": "components/ellipsis/index.ts",
+          "type": "index"
         }
       ]
     },
     "copy-to-clipboard": {
       "name": "copy-to-clipboard",
       "category": "interactive",
-      "description": "Copy text to clipboard with feedback",
+      "description": "copy to-clipboard component for interactive",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1442,13 +1665,17 @@
         {
           "path": "components/copy-to-clipboard/CopyToClipboard.astro",
           "type": "component"
+        },
+        {
+          "path": "components/copy-to-clipboard/index.ts",
+          "type": "index"
         }
       ]
     },
     "monaco-editor": {
       "name": "monaco-editor",
       "category": "interactive",
-      "description": "Code editor powered by Monaco",
+      "description": "monaco editor component for interactive",
       "dependencies": [
         "class-variance-authority@^0.7.1",
         "clsx@^2.1.1",
@@ -1462,6 +1689,10 @@
         {
           "path": "components/monaco-editor/MonacoEditor.astro",
           "type": "component"
+        },
+        {
+          "path": "components/monaco-editor/index.ts",
+          "type": "index"
         }
       ]
     }

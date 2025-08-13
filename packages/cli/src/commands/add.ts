@@ -117,12 +117,20 @@ export async function add(components: string[], options: AddOptions) {
       allComponents.add(componentName);
       const component = registry.components[componentName];
       
-      // Add registry dependencies to queue
-      component.registryDependencies?.forEach(dep => {
-        if (!allComponents.has(dep) && !queue.includes(dep)) {
-          queue.push(dep);
-        }
-      });
+      if (!component) {
+        console.error(chalk.red(`❌ Component "${componentName}" not found in registry.`));
+        process.exit(1);
+      }
+      
+      // Add registry dependencies to queue (only component dependencies, not lib dependencies)
+      if (component.registryDependencies) {
+        component.registryDependencies.forEach(dep => {
+          // Only add if it's a component dependency, not a lib dependency
+          if (registry.components[dep] && !allComponents.has(dep) && !queue.includes(dep)) {
+            queue.push(dep);
+          }
+        });
+      }
     }
 
     // Show what will be installed
