@@ -1,0 +1,32 @@
+{
+  "name": "basis-ui-repository",
+  "version": "1.0.0",
+  "description": "Basis UI - Beautiful Astro + Alpine.js components",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "sync": "node scripts/sync.js",
+    "build-registry": "node scripts/build-registry.js",
+    "sync-all": "npm run sync && npm run build-registry",
+    "dev": "npm run sync-all -- --watch"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.2.0",
+    "typescript": "^5.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/basis-ui.git"
+  },
+  "keywords": [
+    "astro",
+    "alpine.js",
+    "ui",
+    "components",
+    "tailwind"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

@@ -1,0 +1,18 @@
+node_modules/
+.DS_Store
+dist/
+*.log
+.env
+.env.local
+.env.production
+.vscode/
+.idea/
+
+# Build outputs
+packages/*/dist/
+packages/*/node_modules/
+
+# Registry build outputs
+registry/components/
+registry/lib/
+registry/index.json
