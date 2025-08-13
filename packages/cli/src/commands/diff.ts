@@ -12,8 +12,8 @@ const diffOptionsSchema = z.object({
 
 type DiffOptions = z.infer<typeof diffOptionsSchema>;
 
-const REGISTRY_URL = 'https://raw.githubusercontent.com/yourusername/basis-ui/main/registry/index.json';
-const REGISTRY_BASE_URL = 'https://raw.githubusercontent.com/yourusername/basis-ui/main/registry';
+const REGISTRY_URL = 'https://raw.githubusercontent.com/zhengyishen0/basis-ui/main/registry/index.json';
+const REGISTRY_BASE_URL = 'https://raw.githubusercontent.com/zhengyishen0/basis-ui/main/registry';
 
 export async function diff(component: string | undefined, options: DiffOptions) {
   try {

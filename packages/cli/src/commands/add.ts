@@ -17,8 +17,8 @@ const addOptionsSchema = z.object({
 
 type AddOptions = z.infer<typeof addOptionsSchema>;
 
-const REGISTRY_URL = 'https://raw.githubusercontent.com/yourusername/basis-ui/main/registry/index.json';
-const REGISTRY_BASE_URL = 'https://raw.githubusercontent.com/yourusername/basis-ui/main/registry';
+const REGISTRY_URL = 'https://raw.githubusercontent.com/zhengyishen0/basis-ui/main/registry/index.json';
+const REGISTRY_BASE_URL = 'https://raw.githubusercontent.com/zhengyishen0/basis-ui/main/registry';
 
 interface RegistryComponent {
   name: string;
