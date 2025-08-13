@@ -10,7 +10,7 @@ const program = new Command();
 program
   .name('basis-ui')
   .description('Add beautiful Astro + Alpine.js components to your project')
-  .version('0.1.0');
+  .version('0.1.2');
 
 program
   .command('init')
