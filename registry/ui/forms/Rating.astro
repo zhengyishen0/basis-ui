@@ -1,0 +1,119 @@
+---
+import { Icon } from 'astro-icon/components';
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+const ratingVariants = cva(
+  'flex flex-col items-center gap-2 text-muted-foreground [&_.rating-star[data-filled="true"]]:text-warning [&_.rating-star:hover]:text-warning/80 [&_.stars-container]:gap-1.5 [&_.rating-star]:w-5 [&_.rating-star]:h-5'
+);
+
+export interface Props extends VariantProps<typeof ratingVariants> {
+  maxStars?: number;
+  initialValue?: number;
+  disabled?: boolean;
+  readonly?: boolean;
+  name?: string;
+  class?: string;
+  [key: string]: any; // Alpine.js pass-through
+}
+
+const { 
+  maxStars = 5,
+  initialValue = 0,
+  disabled = false,
+  readonly = false,
+  name,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<div 
+  x-data={`{
+    disabled: ${disabled},
+    readonly: ${readonly},
+    maxStars: ${maxStars},
+    stars: 0,
+    value: ${initialValue},
+    
+    hoverStar(star) {
+      if (this.disabled || this.readonly) return;
+      this.stars = star;
+    },
+    
+    mouseLeftStar() {
+      if (this.disabled || this.readonly) return;
+      this.stars = this.value;
+    },
+    
+    rate(star) {
+      if (this.disabled || this.readonly) return;
+      this.value = star;
+      this.stars = star;
+      if (this.$refs.hiddenInput) {
+        this.$refs.hiddenInput.value = star;
+        this.$refs.hiddenInput.dispatchEvent(new Event('change'));
+      }
+      this.$el.dispatchEvent(new CustomEvent('rating-changed', { 
+        detail: star,
+        bubbles: true 
+      }));
+    },
+    
+    reset() {
+      if (this.disabled || this.readonly) return;
+      this.value = 0;
+      this.stars = 0;
+      if (this.$refs.hiddenInput) {
+        this.$refs.hiddenInput.value = 0;
+        this.$refs.hiddenInput.dispatchEvent(new Event('change'));
+      }
+      this.$el.dispatchEvent(new CustomEvent('rating-changed', { 
+        detail: 0,
+        bubbles: true 
+      }));
+    }
+  }`}
+  x-init="stars = value"
+  x-modelable="value"
+  {...alpineProps}
+  class={cn(ratingVariants(), className)}
+>
+  {name && (
+    <input 
+      x-ref="hiddenInput"
+      type="hidden" 
+      name={name}
+      :value="value"
+    />
+  )}
+  
+  <div class="stars-container flex items-center">
+    <template x-for="star in maxStars" :key="star">
+    <button 
+      @click="rate(star)"
+      @mouseenter="hoverStar(star)"
+      @mouseleave="mouseLeftStar()"
+      :disabled="disabled"
+      :data-filled="(stars >= star) || (value >= star && stars === 0)"
+      :class="{
+        'cursor-pointer': !disabled && !readonly,
+        'cursor-not-allowed opacity-50': disabled,
+        'cursor-default': readonly
+      }"
+      class="rating-star focus:outline-none focus:ring-2 focus:ring-ring rounded-sm transition-all duration-200 hover:scale-110 disabled:hover:scale-100"
+      type="button"
+      :aria-label="'Rate ' + star + ' out of ' + maxStars + ' stars'"
+    >
+      <Icon name="lucide:star" class="transition-colors duration-200" :fill="(stars >= star) || (value >= star && stars === 0) ? 'currentColor' : 'none'" />
+    </button>
+    </template>
+  </div>
+  
+  <div 
+    @click="reset()" 
+    class="flex items-center cursor-pointer"
+    :class="{ 'opacity-50 cursor-not-allowed': disabled || readonly }"
+  >
+    <slot />
+  </div>
+</div>

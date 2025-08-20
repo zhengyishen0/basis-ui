@@ -1,0 +1,37 @@
+---
+import RadioGroupItem from './RadioGroupItem.astro';
+
+export interface Props {
+  disabled?: boolean;
+  layout?: 'vertical' | 'horizontal';
+  variant?: 'default' | 'disabled';
+  size?: 'sm' | 'md' | 'lg';
+  padding?: 'sm' | 'md' | 'lg' | 'none';
+  elevation?: 'none' | 'sm' | 'md' | 'lg';
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  disabled,
+  layout,
+  variant,
+  size,
+  padding,
+  elevation,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+// Component props to pass down to RadioGroupItem
+const itemProps = { disabled, layout, variant, size, padding, elevation, class: className };
+---
+
+<template x-for={xFor} x-key={xKey || 'option.value'}>
+  <RadioGroupItem {...itemProps} {...restProps} option="option">
+    <slot />
+  </RadioGroupItem>
+</template>

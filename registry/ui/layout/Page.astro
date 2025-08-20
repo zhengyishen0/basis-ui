@@ -1,0 +1,40 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+    maxWidth?: 'full' | 'narrow' | 'container' | 'wide';
+    overflow?: 'auto' | 'fixed';
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    maxWidth = 'full',
+    overflow = 'auto',
+    class: className = '',
+    ...alpineProps
+} = Astro.props;
+
+const maxWidthClasses = {
+    full: 'w-full',
+    narrow: 'max-w-2xl mx-auto',
+    container: 'max-w-7xl mx-auto',
+    wide: 'max-w-screen-xl mx-auto',
+};
+
+const overflowClasses = {
+    auto: 'overflow-auto', // Default: natural scrolling
+    fixed: 'overflow-hidden', // Fixed boundaries (full-screen apps)
+};
+
+const classes = cn(
+    'min-h-screen',
+    maxWidthClasses[maxWidth],
+    overflowClasses[overflow],
+    className
+);
+---
+
+<main class={classes} {...alpineProps}>
+    <slot />
+</main>

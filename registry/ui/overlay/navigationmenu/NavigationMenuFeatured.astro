@@ -1,0 +1,137 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+  href?: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  className?: string;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'card' | 'minimal';
+  [key: string]: any;
+}
+
+const {
+  href,
+  title,
+  description,
+  image,
+  className,
+  size = 'md',
+  variant = 'default',
+  ...alpineProps
+} = Astro.props;
+
+// Size variants
+const sizeClasses = {
+  sm: 'p-4 min-h-[120px]',
+  md: 'p-6 min-h-[160px]',
+  lg: 'p-8 min-h-[200px]'
+};
+
+// Variant styles
+const variantClasses = {
+  default: 'bg-gradient-to-b from-muted/50 to-muted',
+  card: 'bg-card border border-border shadow-sm',
+  minimal: 'bg-transparent'
+};
+---
+
+<!-- Dynamic featured card when used with item data -->
+<template x-if="typeof item !== 'undefined' && item.featured">
+  <a
+    :href="item.featured.href"
+    @click="closeAllMenus()"
+    @keydown.enter.prevent="window.location.href = item.featured.href; closeAllMenus()"
+    @keydown.space.prevent="window.location.href = item.featured.href; closeAllMenus()"
+    class={cn(
+      'group flex h-full w-full select-none flex-col justify-end rounded-md no-underline outline-none focus:shadow-md focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all hover:scale-[1.02] hover:shadow-lg',
+      sizeClasses[size],
+      className
+    )}
+    :style="item.featured.image ? `background-image: url(${item.featured.image})` : ''"
+    :class="{
+      'bg-gradient-to-b from-muted/50 to-muted': !item.featured.image,
+      'bg-cover bg-center bg-no-repeat relative': item.featured.image
+    }"
+    data-navigation-menu-link
+    tabindex="0"
+    {...alpineProps}
+  >
+    <!-- Overlay for image backgrounds with hover effect -->
+    <div 
+      x-show="item.featured.image" 
+      class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors rounded-md"
+    ></div>
+    
+    <!-- Content -->
+    <div class="relative z-10">
+      <div 
+        class="mb-2 mt-4 font-medium group-hover:scale-[1.02] transition-transform" 
+        :class="{
+          'text-lg': true,
+          'text-white': item.featured.image,
+          'text-foreground': !item.featured.image
+        }" 
+        x-text="item.featured.title"
+      ></div>
+      <p 
+        class="text-sm leading-tight group-hover:opacity-90 transition-opacity" 
+        :class="{
+          'text-white/90': item.featured.image,
+          'text-muted-foreground': !item.featured.image
+        }" 
+        x-text="item.featured.description"
+      ></p>
+    </div>
+  </a>
+</template>
+
+<!-- Static featured card when used with props -->
+<template x-if="typeof item === 'undefined'">
+  <a
+    href={href}
+    @click="closeAllMenus()"
+    @keydown.enter.prevent={href ? `window.location.href = '${href}'; closeAllMenus()` : ''}
+    @keydown.space.prevent={href ? `window.location.href = '${href}'; closeAllMenus()` : ''}
+    class={cn(
+      'group flex h-full w-full select-none flex-col justify-end rounded-md no-underline outline-none focus:shadow-md focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all hover:scale-[1.02] hover:shadow-lg',
+      sizeClasses[size],
+      !image && variantClasses[variant],
+      image && 'bg-cover bg-center bg-no-repeat relative',
+      className
+    )}
+    style={image ? `background-image: url(${image})` : ''}
+    data-navigation-menu-link
+    tabindex="0"
+    {...alpineProps}
+  >
+    <!-- Overlay for image backgrounds with hover effect -->
+    {image && (
+      <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors rounded-md"></div>
+    )}
+    
+    <!-- Content -->
+    <div class="relative z-10">
+      {title && (
+        <div class={cn(
+          'mb-2 mt-4 font-medium group-hover:scale-[1.02] transition-transform',
+          size === 'sm' ? 'text-base' : size === 'lg' ? 'text-xl' : 'text-lg',
+          image ? 'text-white' : 'text-foreground'
+        )}>
+          {title}
+        </div>
+      )}
+      {description && (
+        <p class={cn(
+          'text-sm leading-tight group-hover:opacity-90 transition-opacity',
+          image ? 'text-white/90' : 'text-muted-foreground'
+        )}>
+          {description}
+        </p>
+      )}
+      <slot />
+    </div>
+  </a>
+</template>

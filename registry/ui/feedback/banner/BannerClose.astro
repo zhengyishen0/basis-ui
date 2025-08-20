@@ -1,0 +1,44 @@
+---
+import { cn } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  className?: string;
+  // Alpine.js pass-through
+  [key: string]: any;
+}
+
+const { 
+  className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<!-- 
+BannerClose Component (shadcn composable style)
+
+Usage:
+<BannerClose />
+<BannerClose class="hover:bg-red-100" />
+<BannerClose @click="customCloseHandler()" />
+
+Features:
+- Dismisses banner by setting bannerVisible to false
+- Consistent close button styling
+- Alpine.js integration for banner state
+- Customizable appearance
+- Accessibility compliant
+-->
+
+<button 
+  @click="bannerVisible = false"
+  type="button"
+  aria-label="Close banner"
+  class={cn(
+    "flex-shrink-0 rounded-md p-1 text-current opacity-70 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+    className
+  )}
+  {...alpineProps}
+>
+  <Icon name="lucide:x" class="w-4 h-4" />
+</button>

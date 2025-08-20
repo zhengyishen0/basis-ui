@@ -1,0 +1,112 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import { semanticVariants, overflowVariants } from '@/lib/component-variants';
+import { Icon } from 'astro-icon/components';
+import Text from '@/components/ui/display/Text.astro';
+
+const alertVariants = cva(
+  'relative w-full rounded-lg border flex items-start gap-3 p-md',
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary border-primary text-primary-foreground',
+        secondary: 'bg-secondary border-secondary text-secondary-foreground',
+        destructive: 'bg-background border-destructive text-destructive',
+        success: 'bg-background border-success text-success',
+        warning: 'bg-background border-warning text-warning',
+        info: 'bg-background border-info text-info',
+        outline: 'bg-background border-border text-foreground',
+      },
+      overflow: overflowVariants,
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof alertVariants> {
+  title?: string;
+  description?: string;
+  dismissible?: boolean;
+  class?: string;
+  // Alpine.js pass-through
+  [key: string]: any;
+}
+
+const { 
+  variant = 'default',
+  overflow = 'fixed',
+  title,
+  description,
+  dismissible = false,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<!-- 
+Universal Alert Component
+
+Usage:
+<Alert variant="default" title="Success" description="Your changes have been saved successfully." icon={CheckCircle} dismissible={true} />
+
+<Alert variant="outline" title="Information" icon={Info}>
+  <Text variant="alert-description">This is important information.</Text>
+</Alert>
+
+<Alert variant="destructive" icon={AlertTriangle}>
+  <Text variant="alert-title">Error</Text>  
+  <Text variant="alert-description">Something went wrong.</Text>
+</Alert>
+
+Variants: default (primary bg), outline (bg with primary text), destructive (bg with danger text)
+Features:
+- Universal system compliance (padding, elevation, overflow)
+- Lucide icon support
+- Alpine.js pass-through
+- Dismissible functionality
+- Text component integration
+-->
+
+<div 
+  x-data={dismissible ? '{ dismissed: false }' : undefined}
+  x-show={dismissible ? '!dismissed' : undefined}
+  class={cn(
+    alertVariants({ variant, overflow }),
+    className
+  )}
+  {...alpineProps}
+>
+  <!-- Icon slot -->
+  <slot name="icon" />
+  
+  <div class="flex-1 min-w-0">
+    {title && (
+      <Text variant="alert-title" class="mb-1">
+        {title}
+      </Text>
+    )}
+    
+    {description && (
+      <Text variant="alert-description">
+        {description}
+      </Text>
+    )}
+    
+    {!description && (
+      <div class={title ? "[&>*]:text-sm" : ""}>
+        <slot />
+      </div>
+    )}
+  </div>
+  
+  {dismissible && (
+    <button 
+      @click="dismissed = true"
+      class="flex-shrink-0 text-current hover:opacity-70 transition-opacity"
+      type="button"
+      aria-label="Dismiss alert"
+    >
+      <Icon name="lucide:x" class="w-4 h-4" />
+    </button>
+  )}
+</div>

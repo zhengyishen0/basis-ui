@@ -1,0 +1,57 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import { sizes } from '@/lib/component-variants';
+
+const tabsTriggerVariants = cva(
+    'relative z-20 inline-flex items-center justify-center text-sm font-medium cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 transition-all px-3 py-1.5 w-full',
+    {
+        variants: {
+            variant: {
+                pills: 'rounded-md text-muted-foreground hover:text-foreground',
+                ghost: 'rounded-md text-muted-foreground hover:text-foreground',
+            },
+            size: sizes,
+        },
+    }
+);
+
+export interface Props extends VariantProps<typeof tabsTriggerVariants> {
+    value: string;
+    disabled?: boolean;
+    variant?: 'pills' | 'ghost';
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    value,
+    disabled = false,
+    variant = 'pills',
+    size = 'md',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<button
+    @click={`selectedTab = '${value}'`}
+    :data-state="selectedTab === '${value}' ? 'active' : 'inactive'"
+    :aria-selected="selectedTab === '${value}'"
+    :tabindex="selectedTab === '${value}' ? 0 : -1"
+    class={cn(
+        tabsTriggerVariants({
+            variant,
+            size,
+        }),
+        className
+    )}
+    :class={`selectedTab === '${value}' && '${variant === 'pills' ? 'bg-background text-foreground shadow-sm' : 'text-primary'}'`}
+    role="tab"
+    type="button"
+    disabled={disabled}
+    data-value={value}
+    {...alpineProps}
+>
+    <slot />
+</button>

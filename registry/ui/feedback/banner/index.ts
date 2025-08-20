@@ -1,0 +1,5 @@
+export { default as Banner } from './Banner.astro'
+export { default as BannerAction } from './BannerAction.astro'
+export { default as BannerClose } from './BannerClose.astro'
+export { default as BannerDescription } from './BannerDescription.astro'
+export { default as BannerTitle } from './BannerTitle.astro'

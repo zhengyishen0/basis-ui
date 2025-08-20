@@ -1,0 +1,62 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const contentVariants = cva(
+    'absolute z-popover rounded-md border bg-popover text-popover-foreground shadow-md outline-none',
+    {
+        variants: {
+            theme: {
+                default: 'bg-popover border-border',
+                dark: 'bg-gray-900 border-gray-700 text-white',
+                minimal: 'bg-white border-gray-200 shadow-sm',
+            },
+            placement: {
+                top: 'bottom-full mb-2',
+                bottom: 'top-full mt-2',
+                left: 'right-full mr-2 top-1/2 -translate-y-1/2',
+                right: 'left-full ml-2 top-1/2 -translate-y-1/2',
+            },
+        },
+        defaultVariants: {
+            theme: 'default',
+            placement: 'bottom',
+        },
+    }
+);
+
+export interface Props extends VariantProps<typeof contentVariants> {
+    className?: string;
+    role?: string;
+    [key: string]: any;
+}
+
+const {
+    theme = 'default',
+    placement = 'bottom',
+    className,
+    role = 'dialog',
+    ...alpineProps
+} = Astro.props;
+---
+
+<div
+    x-show="open"
+    x-transition:enter="ease-out duration-200"
+    x-transition:enter-start="opacity-0 scale-95"
+    x-transition:enter-end="opacity-100 scale-100"
+    x-transition:leave="ease-in duration-150"
+    x-transition:leave-start="opacity-100 scale-100"
+    x-transition:leave-end="opacity-0 scale-95"
+    :id="popupId"
+    class={cn(
+        contentVariants({ theme, placement }),
+        'popup-content',
+        className
+    )}
+    style="display: none;"
+    role={role}
+    {...alpineProps}
+>
+    <slot />
+</div>

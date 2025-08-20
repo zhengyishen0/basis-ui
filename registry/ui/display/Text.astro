@@ -1,0 +1,158 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const textVariants = cva('leading-none m-0', {
+    variants: {
+        variant: {
+            // Hero variants
+            'hero-title':
+                'text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight',
+            'hero-subtitle':
+                'text-xl md:text-2xl font-semibold text-muted-foreground leading-relaxed',
+            'hero-description':
+                'text-lg md:text-xl text-muted-foreground leading-relaxed',
+
+            // Card variants
+            'card-title': 'text-xl font-semibold text-foreground',
+            'card-subtitle': 'text-lg font-medium text-muted-foreground',
+            'card-description': 'text-base text-muted-foreground leading-relaxed',
+            'card-content': 'text-sm text-foreground leading-normal',
+
+            // Alert variants
+            'alert-title': 'text-base font-medium leading-none tracking-tight',
+            'alert-description': 'text-sm leading-relaxed',
+
+            // Accordion variants
+            'accordion-trigger':
+                'text-base font-semibold text-foreground select-none',
+            'accordion-content': 'text-sm text-muted-foreground leading-relaxed',
+
+            // Page variants
+            'page-title': 'text-3xl font-bold text-foreground',
+            'page-subtitle': 'text-xl font-medium text-muted-foreground',
+
+            // Section variants
+            'section-title': 'text-2xl font-semibold text-foreground',
+            'section-subtitle': 'text-lg font-medium text-muted-foreground',
+
+            // Feature variants
+            'feature-title': 'text-xl font-semibold text-foreground',
+            'feature-description': 'text-base text-muted-foreground leading-relaxed',
+
+            // Testimonial variants
+            'testimonial-quote': 'text-lg italic text-foreground leading-relaxed',
+            'testimonial-author': 'text-sm font-medium text-foreground',
+
+            // Stats variants
+            'stats-number': 'text-3xl md:text-4xl font-bold text-foreground',
+            'stats-label':
+                'text-sm font-medium text-muted-foreground uppercase tracking-wide',
+
+            // Body variants
+            body: 'text-base text-foreground',
+            'body-large': 'text-lg text-foreground',
+            'body-small': 'text-sm text-muted-foreground',
+
+            // Utility variants
+            caption: 'text-xs text-muted-foreground uppercase tracking-wide',
+            label: 'text-sm font-medium text-foreground',
+            overline:
+                'text-xs font-medium text-muted-foreground uppercase tracking-widest',
+
+            // Interactive variants
+            button: 'text-sm font-medium',
+            link: 'text-sm text-primary hover:text-primary/80 underline',
+
+            // Status variants
+            muted: 'text-sm text-muted-foreground',
+            error: 'text-sm text-destructive font-medium',
+            success: 'text-sm text-success font-medium',
+            warning: 'text-sm text-warning font-medium',
+            info: 'text-sm text-info font-medium',
+        },
+        state: {
+            active: 'text-foreground font-medium',
+            completed: 'text-muted-foreground line-through',
+            pending: 'text-muted-foreground italic',
+            disabled: 'text-muted-foreground opacity-60',
+        },
+    },
+    defaultVariants: {
+        variant: 'body',
+    },
+});
+
+export interface Props extends VariantProps<typeof textVariants> {
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const { variant, state, class: className, ...rest } = Astro.props;
+
+// Determine element based on variant if not explicitly set
+const getElementFromVariant = (variant: string) => {
+    switch (variant) {
+        case 'hero-title':
+        case 'page-title':
+            return 'h1';
+        case 'card-title':
+        case 'section-title':
+        case 'feature-title':
+            return 'h2';
+        case 'hero-subtitle':
+        case 'card-subtitle':
+        case 'page-subtitle':
+        case 'section-subtitle':
+            return 'h3';
+        case 'alert-title':
+            return 'h5';
+        case 'hero-description':
+        case 'card-description':
+        case 'card-content':
+        case 'accordion-content':
+        case 'feature-description':
+        case 'alert-description':
+        case 'body':
+        case 'body-large':
+            return 'p';
+        case 'testimonial-quote':
+            return 'blockquote';
+        case 'testimonial-author':
+        case 'stats-label':
+            return 'cite';
+        case 'stats-number':
+            return 'strong';
+        case 'body-small':
+        case 'caption':
+        case 'muted':
+            return 'small';
+        case 'accordion-trigger':
+        case 'label':
+        case 'overline':
+            return 'span';
+        case 'button':
+        case 'link':
+            return 'span';
+        default:
+            return 'span';
+    }
+};
+
+const Element = getElementFromVariant(variant || 'body');
+
+const classes = cn(textVariants({ variant, state }), className);
+---
+
+<Element 
+    class={classes} 
+    x-bind:class={rest[':state'] ? `{
+        'text-foreground font-medium': ${rest[':state']} === 'active',
+        'text-muted-foreground line-through': ${rest[':state']} === 'completed',
+        'text-muted-foreground italic': ${rest[':state']} === 'pending',
+        'text-muted-foreground opacity-60': ${rest[':state']} === 'disabled'
+    }` : undefined}
+    {...rest}
+>
+    <slot />
+</Element>

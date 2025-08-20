@@ -1,0 +1,58 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+  value?: string;
+  className?: string;
+  item?: any;
+  [key: string]: any;
+}
+
+const {
+  value,
+  className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<div
+  x-data={`{
+    menuId: typeof item !== 'undefined' ? item.id : ('${value}' || $id('nav-item')),
+    get isOpen() {
+      return activeMenu === this.menuId;
+    },
+    get hasContent() {
+      if (typeof item !== 'undefined') {
+        return item.type !== 'link' && item.links && item.links.length > 0;
+      }
+      return !!$el.querySelector('[data-navigation-menu-content]');
+    }
+  }`}
+  @mouseenter="!keyboardActive && hasContent && openMenu(menuId)"
+  @mouseleave="!keyboardActive && hasContent && scheduleClose(menuId)"
+  @focusin="cancelClose(); hasContent && openMenu(menuId)"
+  class={cn('relative', className)}
+  data-navigation-menu-item
+  {...alpineProps}
+>
+  <!-- Dynamic item rendering (when item exists in Alpine scope) -->
+  <template x-if="typeof item !== 'undefined' && item.type === 'link'">
+    <div>
+      <slot name="link" />
+    </div>
+  </template>
+  
+  <template x-if="typeof item !== 'undefined' && item.type !== 'link'">
+    <div>
+      <slot name="trigger" />
+      <slot name="content" />
+    </div>
+  </template>
+  
+  <!-- Static rendering (when no item in Alpine scope) -->
+  <template x-if="typeof item === 'undefined'">
+    <div>
+      <slot />
+    </div>
+  </template>
+</div>

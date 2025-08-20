@@ -1,0 +1,83 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const navigationMenuContentVariants = cva(
+    'gap-3 p-2',
+    {
+        variants: {
+            layout: {
+                list: 'grid grid-cols-1',
+                grid: 'grid md:grid-cols-2',
+                feature: 'flex flex-row gap-4'
+            }
+        },
+        defaultVariants: {
+            layout: 'grid'
+        }
+    }
+);
+
+export interface Props extends VariantProps<typeof navigationMenuContentVariants> {
+    gridColumns?: number;
+    className?: string;
+    minWidth?: string;
+    [key: string]: any;
+}
+
+const {
+    layout = 'grid',
+    gridColumns = 2,
+    minWidth = '400px',
+    className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<div
+    x-show="isOpen"
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0 scale-95"
+    x-transition:enter-end="opacity-100 scale-100"
+    x-transition:leave="transition ease-in duration-150"
+    x-transition:leave-start="opacity-100 scale-100"
+    x-transition:leave-end="opacity-0 scale-95"
+    @mouseenter="cancelClose()"
+    @mouseleave="scheduleClose(menuId)"
+    @keydown.arrow-up.prevent="$event.target.previousElementSibling?.focus()"
+    @keydown.arrow-down.prevent="$event.target.nextElementSibling?.focus()"
+    @keydown.escape.prevent="closeAllMenus(); $el.closest('[data-navigation-menu-item]').querySelector('[data-navigation-menu-trigger]')?.focus()"
+    :data-navigation-menu-content="menuId"
+    class={cn(
+        'absolute left-0 top-full w-full z-50 bg-popover border rounded-md shadow-lg p-2 mt-1',
+        className
+    )}
+    style={`min-width: ${minWidth}`}
+    {...alpineProps}
+>
+    <!-- Dynamic layout - use item.type for layout -->
+    <template x-if="typeof item !== 'undefined'">
+        <div 
+            class={cn('gap-3 p-2', className)}
+            :class="{
+                'grid grid-cols-1': item.type === 'list',
+                'grid md:grid-cols-2': item.type === 'grid' && !item.gridColumns,
+                'flex flex-row gap-4': item.type === 'feature',
+                'grid': item.type === 'grid' && item.gridColumns
+            }"
+            :style="item.type === 'grid' && item.gridColumns ? 'grid-template-columns: repeat(' + item.gridColumns + ', minmax(0, 1fr))' : ''"
+        >
+            <slot />
+        </div>
+    </template>
+
+    <!-- Static layout when used without item -->
+    <template x-if="typeof item === 'undefined'">
+        <div
+            class={cn(navigationMenuContentVariants({ layout }), className)}
+            style={layout === 'grid' && gridColumns !== 2 ? `grid-template-columns: repeat(${gridColumns}, minmax(0, 1fr))` : ''}
+        >
+            <slot />
+        </div>
+    </template>
+</div>

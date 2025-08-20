@@ -108,6 +108,9 @@ export async function init(options: InitOptions) {
       await fs.ensureDir(path.join(cwd, "src/lib"));
       await fs.ensureDir(path.join(cwd, "src/styles"));
 
+      // Install Astro integrations and base packages
+      await setupAstroIntegrations(cwd);
+
       // Create/update tsconfig.json paths
       await updateTsConfig(cwd, config);
 
@@ -118,6 +121,9 @@ export async function init(options: InitOptions) {
       if (config.rsc) {
         await setupAlpine(cwd);
       }
+
+      // Setup icons
+      await setupIcons(cwd);
 
       // Add utils
       await addUtils(cwd);
@@ -149,9 +155,9 @@ export async function init(options: InitOptions) {
         )
       );
       console.log("\nNext steps:");
-      console.log(chalk.blue("  npx basisui add button"));
-      console.log(chalk.blue("  npx basisui add card"));
-      console.log("\nFor more components: https://basis.zhengyishen.com");
+      console.log(chalk.blue("  npx basisui add ui"));
+      console.log("\nThis will install the complete UI component library.");
+      console.log("\nFor more information: https://basis.zhengyishen.com");
     } catch (error) {
       spinner.fail("Setup failed");
       throw error;
@@ -192,22 +198,22 @@ async function setupTailwind(cwd: string, config: any) {
   const packageJsonPath = path.join(cwd, "package.json");
   const packageJson = await fs.readJson(packageJsonPath);
 
-  if (
-    !packageJson.dependencies?.tailwindcss &&
-    !packageJson.devDependencies?.tailwindcss
-  ) {
-    // Install Tailwind CSS
-    await execa(
-      "npm",
-      [
-        "install",
-        "-D",
-        "tailwindcss",
-        "@tailwindcss/typography",
-        "autoprefixer",
-      ],
-      { cwd }
-    );
+  // Install Tailwind CSS v3 and related packages
+  const tailwindPackages = [
+    "tailwindcss@^3.4.0",
+    "@tailwindcss/typography@^0.5.10", 
+    "autoprefixer@^10.4.16",
+    "postcss@^8.4.32"
+  ];
+  
+  const missingTailwindPackages = tailwindPackages.filter(pkg => {
+    const packageName = pkg.split('@')[0];
+    return !packageJson.dependencies?.[packageName] && !packageJson.devDependencies?.[packageName];
+  });
+  
+  if (missingTailwindPackages.length > 0) {
+    console.log(chalk.blue('📦 Installing Tailwind CSS v3...'));
+    await execa("npm", ["install", "-D", ...missingTailwindPackages], { cwd });
   }
 
   // Update Tailwind config
@@ -374,6 +380,67 @@ async function setupAlpine(cwd: string) {
   }
 }
 
+async function setupAstroIntegrations(cwd: string) {
+  const packageJsonPath = path.join(cwd, "package.json");
+  const packageJson = await fs.readJson(packageJsonPath);
+
+  // Core Astro integrations and packages
+  const astroPackages = [
+    "@astrojs/tailwind@^5.1.0",
+    "@astrojs/alpinejs@^0.4.0",
+    "astro@^4.15.0" // Ensure we have a recent version
+  ];
+
+  const missingAstroPackages = astroPackages.filter(pkg => {
+    const packageName = pkg.split('@')[0] + (pkg.includes('/') ? '/' + pkg.split('/')[1].split('@')[0] : '');
+    return !packageJson.dependencies?.[packageName] && !packageJson.devDependencies?.[packageName];
+  });
+
+  if (missingAstroPackages.length > 0) {
+    console.log(chalk.blue('🚀 Installing Astro integrations...'));
+    await execa("npm", ["install", ...missingAstroPackages], { cwd });
+  }
+
+  // Also install class-variance-authority which is core to the component system
+  const corePackages = [
+    "class-variance-authority@^0.7.1",
+  ];
+
+  const missingCorePackages = corePackages.filter(pkg => {
+    const packageName = pkg.split('@')[0];
+    return !packageJson.dependencies?.[packageName] && !packageJson.devDependencies?.[packageName];
+  });
+
+  if (missingCorePackages.length > 0) {
+    console.log(chalk.blue('📦 Installing core packages...'));
+    await execa("npm", ["install", ...missingCorePackages], { cwd });
+  }
+}
+
+async function setupIcons(cwd: string) {
+  const packageJsonPath = path.join(cwd, "package.json");
+  const packageJson = await fs.readJson(packageJsonPath);
+
+  // Icon packages for the UI components
+  const iconPackages = [
+    "astro-icon@^1.1.5",
+    "@iconify-json/lucide@^1.2.62",
+    "@iconify/tools@^4.0.0"
+  ];
+
+  const missingIconPackages = iconPackages.filter(pkg => {
+    const packageName = pkg.includes('/') 
+      ? pkg.split('@')[0] + '/' + pkg.split('@')[1].split('/')[0]
+      : pkg.split('@')[0];
+    return !packageJson.dependencies?.[packageName] && !packageJson.devDependencies?.[packageName];
+  });
+
+  if (missingIconPackages.length > 0) {
+    console.log(chalk.blue('🎨 Installing icon packages...'));
+    await execa("npm", ["install", ...missingIconPackages], { cwd });
+  }
+}
+
 async function addUtils(cwd: string) {
   const utilsContent = `import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
@@ -386,5 +453,5 @@ export function cn(...inputs: ClassValue[]) {
   await fs.writeFile(utilsPath, utilsContent);
 
   // Install dependencies
-  await execa("npm", ["install", "clsx", "tailwind-merge"], { cwd });
+  await execa("npm", ["install", "clsx@^2.1.1", "tailwind-merge@^2.5.4"], { cwd });
 }

@@ -1,0 +1,23 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+    className?: string;
+    justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+    // Alpine.js pass-through
+    [key: string]: any;
+}
+
+const { className, justify = 'end', ...alpineProps } = Astro.props;
+---
+
+<div
+    class={cn(
+        'flex items-center px-6 py-3 pb-4 card-footer gap-2',
+        `justify-${justify}`,
+        className
+    )}
+    {...alpineProps}
+>
+    <slot />
+</div>

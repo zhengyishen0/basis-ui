@@ -1,0 +1,45 @@
+---
+import MenuItem from './MenuItem.astro';
+
+export interface Props {
+  variant?: 'default' | 'command';
+  activeModel?: string;
+  role?: 'menuitem' | 'option' | 'button';
+  onSelect?: string;
+  className?: string;
+  [key: string]: any;
+}
+
+const {
+  variant,
+  activeModel,
+  role,
+  onSelect,
+  className,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+// Extract the item variable name from x-for (e.g., "item in items" -> "item")
+const itemVar = xFor ? xFor.split(' in ')[0].trim() : 'item';
+
+// Component props to pass down to MenuItem
+const itemProps = { 
+  variant, 
+  activeModel, 
+  role, 
+  onSelect: onSelect || `selectItem(${itemVar})`,
+  className,
+  item: itemVar // Pass the variable name as a string
+};
+---
+
+<template x-for={xFor} x-key={xKey || `${itemVar}.id`}>
+  <MenuItem {...itemProps} {...restProps}>
+    <slot />
+    <slot name="shortcut" slot="shortcut" />
+    <slot name="icon" slot="icon" />
+  </MenuItem>
+</template>

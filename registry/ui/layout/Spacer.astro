@@ -1,0 +1,17 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const { 
+    class: className = '', 
+    ...rest 
+} = Astro.props;
+
+const classes = cn('flex-1 min-w-0', className);
+---
+
+<div class={classes} {...rest}></div>

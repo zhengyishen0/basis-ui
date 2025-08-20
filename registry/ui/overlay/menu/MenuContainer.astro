@@ -1,0 +1,272 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import Empty from '@/components/ui/feedback/Empty.astro';
+
+const containerVariants = cva(
+  'flex w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground',
+  {
+    variants: {
+      variant: {
+        default: 'border border-border shadow-md',
+        ghost: 'border-0 shadow-none',
+        dialog: 'border-0 shadow-lg'
+      },
+      size: {
+        sm: 'h-60',
+        md: 'h-80', 
+        lg: 'h-96',
+        full: 'h-full'
+      }
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'md'
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof containerVariants> {
+  items?: Record<string, Array<{
+    title: string;
+    value: string;
+    icon?: string;
+    shortcut?: string;
+    show?: boolean;
+    disabled?: boolean;
+  }>>;
+  searchEnabled?: boolean;
+  keyboardNav?: boolean;
+  searchModel?: string;
+  activeModel?: string;
+  itemsModel?: string;
+  emptyText?: string;
+  onSelect?: string;
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  items = {},
+  searchEnabled = true,
+  keyboardNav = true,
+  searchModel = 'menuSearch',
+  activeModel = 'activeIndex',
+  itemsModel = 'menuItems',
+  emptyText = 'No results found.',
+  onSelect = 'console.log(item)',
+  variant,
+  size,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+
+const containerData = `{
+  ${itemsModel}: ${JSON.stringify(items)},
+  ${searchModel}: '',
+  ${activeModel}: -1,  // Will be set correctly by init()
+  itemSelected: null,
+  
+  init() {
+    // Set initial activeModel to first selectable item
+    this.$nextTick(() => {
+      const selectableItems = this.selectableItems;
+      if (selectableItems.length > 0) {
+        const firstSelectableItem = selectableItems[0];
+        this.${activeModel} = this.flattenedItems.findIndex(item => item === firstSelectableItem);
+      } else {
+        this.${activeModel} = 0;
+      }
+    });
+    
+    // Reset search when dialog opens/closes
+    const dialog = this.$el.closest('[x-data]');
+    if (dialog && dialog !== this.$el) {
+      this.$watch(() => dialog.open, (isOpen) => {
+        if (!isOpen) {
+          this.${searchModel} = '';
+          this.${activeModel} = 0;
+        }
+      });
+    }
+    
+    this.$watch('itemSelected', (item) => {
+      if (item) {
+        ${onSelect}
+      }
+    });
+    
+    // Reset active index when filtered items change
+    this.$watch('filteredItems', () => {
+      this.$nextTick(() => {
+        const selectableItems = this.selectableItems;
+        if (selectableItems.length > 0) {
+          // Set activeModel to the DOM index of the first selectable item
+          const firstSelectableItem = selectableItems[0];
+          this.${activeModel} = this.flattenedItems.findIndex(item => item === firstSelectableItem);
+        } else {
+          this.${activeModel} = -1;
+        }
+      });
+    });
+  },
+  
+  get filteredItems() {
+    ${searchEnabled ? `
+    if (!this.${searchModel}.trim()) {
+      return Object.entries(this.${itemsModel}).reduce((acc, [category, items]) => {
+        const defaultItems = items.filter(item => item.show !== false);
+        if (defaultItems.length > 0) {
+          acc[category] = defaultItems;
+        }
+        return acc;
+      }, {});
+    }
+    
+    const search = this.${searchModel}.toLowerCase();
+    return Object.entries(this.${itemsModel}).reduce((acc, [category, items]) => {
+      const filtered = items.filter(item => 
+        item.title.toLowerCase().includes(search) ||
+        item.value.toLowerCase().includes(search)
+      );
+      if (filtered.length > 0) {
+        acc[category] = filtered;
+      }
+      return acc;
+    }, {});
+    ` : `
+    return Object.entries(this.${itemsModel}).reduce((acc, [category, items]) => {
+      const defaultItems = items.filter(item => item.show !== false);
+      if (defaultItems.length > 0) {
+        acc[category] = defaultItems;
+      }
+      return acc;
+    }, {});
+    `}
+  },
+  
+  get flattenedItems() {
+    return Object.values(this.filteredItems).flat();
+  },
+  
+  get selectableItems() {
+    return this.flattenedItems.filter(item => !item.disabled);
+  },
+  
+  get hasResults() {
+    return this.flattenedItems.length > 0;
+  },
+  
+  ${keyboardNav ? `
+  itemActiveNext() {
+    const selectableItems = this.selectableItems;
+    const flattenedItems = this.flattenedItems;
+    if (selectableItems.length === 0) return;
+    
+    // Find current selectable index
+    const currentItem = flattenedItems[this.${activeModel}];
+    let currentSelectableIndex = selectableItems.findIndex(item => item === currentItem);
+    
+    // If current item not found in selectable items, start from first
+    if (currentSelectableIndex === -1) {
+      currentSelectableIndex = -1;
+    }
+    
+    // Move to next selectable item
+    const nextSelectableIndex = (currentSelectableIndex + 1) % selectableItems.length;
+    const nextItem = selectableItems[nextSelectableIndex];
+    
+    // Update activeModel to the DOM index of the next selectable item
+    this.${activeModel} = flattenedItems.findIndex(item => item === nextItem);
+  },
+  
+  itemActivePrevious() {
+    const selectableItems = this.selectableItems;
+    const flattenedItems = this.flattenedItems;
+    if (selectableItems.length === 0) return;
+    
+    // Find current selectable index
+    const currentItem = flattenedItems[this.${activeModel}];
+    let currentSelectableIndex = selectableItems.findIndex(item => item === currentItem);
+    
+    // If current item not found in selectable items, start from last
+    if (currentSelectableIndex === -1) {
+      currentSelectableIndex = selectableItems.length;
+    }
+    
+    // Move to previous selectable item
+    const prevSelectableIndex = currentSelectableIndex <= 0 ? selectableItems.length - 1 : currentSelectableIndex - 1;
+    const prevItem = selectableItems[prevSelectableIndex];
+    
+    // Update activeModel to the DOM index of the previous selectable item
+    this.${activeModel} = flattenedItems.findIndex(item => item === prevItem);
+  },
+  
+  selectActiveItem() {
+    const items = this.flattenedItems;
+    const selectableItems = this.selectableItems;
+    const activeIndex = this.${activeModel};
+    
+    // If activeIndex is invalid or out of bounds, use first selectable item
+    if (activeIndex < 0 || activeIndex >= items.length || !items[activeIndex]) {
+      if (selectableItems.length > 0) {
+        const firstSelectableItem = selectableItems[0];
+        this.itemSelected = firstSelectableItem;
+        // Update activeModel to the correct index for next time
+        this.${activeModel} = items.findIndex(item => item === firstSelectableItem);
+      }
+      return;
+    }
+    
+    const activeItem = items[activeIndex];
+    if (activeItem && !activeItem.disabled) {
+      this.itemSelected = activeItem;
+    } else {
+      // Fallback to first selectable item
+      if (selectableItems.length > 0) {
+        const firstSelectableItem = selectableItems[0];
+        this.itemSelected = firstSelectableItem;
+      }
+    }
+  },
+  ` : ''}
+  
+  selectItem(item) {
+    this.itemSelected = item;
+  }
+}`;
+---
+
+<div 
+  x-data={containerData}
+  class={cn(containerVariants({ variant, size }), "justify-between", className)}
+  role="combobox"
+  aria-expanded="true"
+  {...alpineProps}
+>
+  <!-- Input at top -->
+  <slot name="input" />
+  
+  <!-- Menu List Container - Takes all available space between input and footer -->
+  <div 
+    class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden" 
+    role="listbox"
+  >
+    <!-- Show empty state when no results -->
+    <template x-if="!hasResults">
+      <Empty size="sm">
+        {emptyText}
+      </Empty>
+    </template>
+    
+    <!-- Show filtered categories and items -->
+    <template x-if="hasResults">
+      <div>
+        <slot />
+      </div>
+    </template>
+  </div>
+  
+  <!-- Footer at bottom -->
+  <slot name="footer" />
+</div>

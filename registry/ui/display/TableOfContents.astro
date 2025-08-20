@@ -1,0 +1,235 @@
+---
+import { cn } from "@/lib/utils";
+
+export interface Props {
+  headings?: Array<{
+    depth: number;
+    slug: string;
+    text: string;
+  }>;
+  class?: string;
+  autoCollapse?: boolean;
+  title?: string;
+  containerSelector?: string;
+}
+
+const { 
+  headings = [], 
+  class: className, 
+  autoCollapse = false,
+  title = "On This Page",
+  containerSelector 
+} = Astro.props;
+
+const headingsJson = JSON.stringify(headings);
+---
+
+<div 
+  x-data={`{
+    headings: ${headingsJson},
+    activeId: null,
+    observer: null,
+    autoCollapse: ${autoCollapse},
+    expandedSections: new Set(),
+    containerSelector: ${containerSelector ? `'${containerSelector}'` : 'null'},
+    
+    init() {
+      // Extract headings from container if selector provided
+      if (this.containerSelector && this.headings.length === 0) {
+        this.extractHeadings();
+      }
+      
+      this.setupObserver();
+      this.$nextTick(() => {
+        this.observeHeadings();
+        this.setInitialActive();
+        if (this.autoCollapse) {
+          this.initializeExpanded();
+        }
+      });
+    },
+    
+    extractHeadings() {
+      const container = document.querySelector(this.containerSelector);
+      if (!container) return;
+      
+      const headingElements = container.querySelectorAll('h2, h3, h4');
+      const extractedHeadings = [];
+      
+      headingElements.forEach(el => {
+        // Get or create ID
+        let id = el.id;
+        if (!id) {
+          // Generate ID from text content
+          id = el.textContent
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+          el.id = id;
+        }
+        
+        extractedHeadings.push({
+          depth: parseInt(el.tagName.charAt(1)),
+          slug: id,
+          text: el.textContent.trim()
+        });
+      });
+      
+      this.headings = extractedHeadings;
+    },
+    
+    setupObserver() {
+      this.observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              this.activeId = entry.target.id;
+              if (this.autoCollapse) {
+                this.updateExpanded(entry.target.id);
+              }
+            }
+          });
+        },
+        {
+          rootMargin: '0px 0px -80% 0px',
+          threshold: 0
+        }
+      );
+    },
+    
+    observeHeadings() {
+      this.headings.forEach(heading => {
+        const el = document.getElementById(heading.slug);
+        if (el) this.observer.observe(el);
+      });
+    },
+    
+    setInitialActive() {
+      // Check if there's a hash in URL
+      const hash = window.location.hash.slice(1);
+      if (hash) {
+        this.activeId = hash;
+        if (this.autoCollapse) {
+          this.updateExpanded(hash);
+        }
+      } else {
+        // Set first heading as active if no hash
+        if (this.headings.length > 0) {
+          this.activeId = this.headings[0].slug;
+          if (this.autoCollapse) {
+            this.updateExpanded(this.headings[0].slug);
+          }
+        }
+      }
+    },
+    
+    initializeExpanded() {
+      // Start with first h2 section expanded
+      const firstH2 = this.headings.find(h => h.depth === 2);
+      if (firstH2) {
+        this.expandedSections.add(firstH2.slug);
+      }
+    },
+    
+    updateExpanded(activeSlug) {
+      const activeHeading = this.headings.find(h => h.slug === activeSlug);
+      if (!activeHeading) return;
+      
+      // Clear all expanded sections
+      this.expandedSections.clear();
+      
+      if (activeHeading.depth === 2) {
+        // If active is h2, expand it
+        this.expandedSections.add(activeSlug);
+      } else {
+        // If active is h3/h4, find parent h2 and expand it
+        let parentH2 = null;
+        for (let i = this.headings.indexOf(activeHeading) - 1; i >= 0; i--) {
+          if (this.headings[i].depth === 2) {
+            parentH2 = this.headings[i];
+            break;
+          }
+        }
+        if (parentH2) {
+          this.expandedSections.add(parentH2.slug);
+        }
+      }
+    },
+    
+    isVisible(heading, index) {
+      if (!this.autoCollapse) return true;
+      if (heading.depth === 2) return true;
+      
+      // Find parent h2
+      for (let i = index - 1; i >= 0; i--) {
+        if (this.headings[i].depth === 2) {
+          return this.expandedSections.has(this.headings[i].slug);
+        }
+      }
+      return false;
+    },
+    
+    scrollTo(slug) {
+      const element = document.getElementById(slug);
+      if (element) {
+        const yOffset = -80; // Account for fixed header
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        
+        window.scrollTo({ 
+          top: y,
+          behavior: 'smooth' 
+        });
+        
+        // Update URL hash without causing jump
+        history.pushState(null, null, '#' + slug);
+        
+        // Manually set active since smooth scroll delays intersection
+        this.activeId = slug;
+        if (this.autoCollapse) {
+          this.updateExpanded(slug);
+        }
+      }
+    },
+    
+    destroy() {
+      if (this.observer) {
+        this.observer.disconnect();
+      }
+    }
+  }`}
+  x-init="init()"
+  x-on:beforeunload.window="destroy()"
+  class={cn(
+    "sticky top-4 hidden lg:block",
+    className
+  )}
+>
+  <div class="space-y-2 pb-4">
+    <p class="font-medium text-sm">{title}</p>
+    <ul class="m-0 list-none border-l border-border text-sm">
+      <template x-for="(heading, index) in headings" :key="heading.slug">
+        <li 
+          class="mt-0 overflow-hidden transition-all duration-200"
+          :class="{
+            'max-h-0 opacity-0': !isVisible(heading, index),
+            'max-h-10 opacity-100': isVisible(heading, index)
+          }"
+        >
+          <a 
+            :href="'#' + heading.slug"
+            @click.prevent="scrollTo(heading.slug)"
+            :class="{
+              'font-medium text-foreground border-l-2 border-foreground -ml-[2px]': activeId === heading.slug,
+              'text-muted-foreground hover:text-foreground border-l-2 border-transparent -ml-[2px]': activeId !== heading.slug,
+              'pl-4': heading.depth === 2,
+              'pl-8': heading.depth === 3,
+              'pl-12': heading.depth === 4
+            }"
+            class="inline-block py-1 no-underline transition-colors"
+            x-text="heading.text"
+          ></a>
+        </li>
+      </template>
+    </ul>
+  </div>
+</div>

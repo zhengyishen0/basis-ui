@@ -1,0 +1,106 @@
+---
+import { cn } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  searchPlaceholder?: string;
+  showSearch?: boolean;
+  showActions?: boolean;
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  searchPlaceholder = "Search...",
+  showSearch = true,
+  showActions = true,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<div 
+  class={cn("flex items-center justify-between gap-4 p-4 bg-background border border-border rounded-lg", className)}
+  {...alpineProps}
+>
+  <!-- Left side - Search and filters -->
+  <div class="flex items-center gap-4 flex-1">
+    {showSearch && (
+      <div class="relative">
+        <input
+          type="text"
+          placeholder={searchPlaceholder}
+          class="pl-10 pr-4 py-2 w-72 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+          x-model="searchQuery"
+          x-on:input.debounce.300="filter()"
+        />
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Icon name="lucide:search" class="h-4 w-4 text-muted-foreground" />
+        </div>
+      </div>
+    )}
+    
+    <!-- Custom filter slot -->
+    <slot name="filters" />
+  </div>
+
+  <!-- Right side - Actions -->
+  {showActions && (
+    <div class="flex items-center gap-2">
+      <!-- Selection actions (shown when rows are selected) -->
+      <div x-show="hasSelection" class="flex items-center gap-2">
+        <span class="text-sm text-muted-foreground" x-text="`${selectedCount} selected`"></span>
+        <slot name="selection-actions">
+          <button 
+            class="px-3 py-1 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+            x-on:click="clearSelection()"
+          >
+            Clear
+          </button>
+        </slot>
+      </div>
+
+      <!-- Regular actions -->
+      <slot name="actions">
+        <button 
+          class="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          x-on:click="refreshData()"
+        >
+          Refresh
+        </button>
+      </slot>
+
+      <!-- Column visibility toggle -->
+      <div class="relative" x-data="{ open: false }">
+        <button 
+          class="px-3 py-2 text-sm border border-input rounded-md bg-background hover:bg-accent transition-colors"
+          x-on:click="open = !open"
+        >
+          Columns
+          <Icon name="lucide:chevron-down" class="ml-1 h-4 w-4 inline" />
+        </button>
+        
+        <div 
+          x-show="open"
+          x-transition
+          x-on:click.away="open = false"
+          class="absolute right-0 mt-2 w-48 bg-background border border-border rounded-md shadow-lg z-10"
+        >
+          <div class="p-2">
+            <template x-for="column in columns" x-key="column.key">
+              <label class="flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  class="rounded border-input"
+                  x-bind:checked="!column.hidden"
+                  x-on:change="column.hidden = !$event.target.checked"
+                />
+                <span class="text-sm" x-text="column.label"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+</div>

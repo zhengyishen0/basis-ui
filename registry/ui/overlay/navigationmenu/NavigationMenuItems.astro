@@ -1,0 +1,27 @@
+---
+import NavigationMenuItem from './NavigationMenuItem.astro';
+
+export interface Props {
+  className?: string;
+  [key: string]: any;
+}
+
+const {
+  className,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+// Component props to pass down to NavigationMenuItem
+const itemProps = { className };
+---
+
+<template x-for={xFor} x-key={xKey || 'item.id'}>
+  <NavigationMenuItem {...itemProps} {...restProps} :item="item">
+    <slot name="link" slot="link" />
+    <slot name="trigger" slot="trigger" />
+    <slot name="content" slot="content" />
+  </NavigationMenuItem>
+</template>

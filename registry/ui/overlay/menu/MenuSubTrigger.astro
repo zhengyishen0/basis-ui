@@ -1,0 +1,34 @@
+---
+import { cn } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+    className?: string;
+    [key: string]: any;
+}
+
+const { className, ...alpineProps } = Astro.props;
+
+// Extract x-text from alpineProps
+const { 'x-text': xText, ...restProps } = alpineProps;
+---
+
+<div
+    x-ref="submenuTrigger"
+    data-menu-item
+    @mouseenter="$el.closest('[x-data]') && ($el.closest('[x-data]').activeIndex = Array.from($el.closest('[role=menu]')?.querySelectorAll('[data-menu-item]') || []).indexOf($el)); $dispatch('open-submenu')"
+    :data-active="(typeof activeIndex !== 'undefined' ? activeIndex : -1) === Array.from($el.closest('[role=menu]')?.querySelectorAll('[data-menu-item]') || []).indexOf($el)"
+    class={cn(
+        'relative flex cursor-default select-none items-center justify-between w-full rounded-sm px-3 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground',
+        className
+    )}
+    role="menuitem"
+    aria-haspopup="true"
+    :aria-expanded="false"
+    tabindex="-1"
+    {...restProps}
+>
+    {xText && <span x-text={xText}></span>}
+    <slot />
+    <Icon name="lucide:chevron-right" class="h-4 w-4" />
+</div>

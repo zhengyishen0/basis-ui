@@ -1,0 +1,24 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+  className?: string;
+  [key: string]: any;
+}
+
+const {
+  className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<div
+  class={cn(
+    'group flex flex-1 list-none items-center justify-center space-x-1',
+    className
+  )}
+  data-navigation-menu-list
+  {...alpineProps}
+>
+  <slot />
+</div>

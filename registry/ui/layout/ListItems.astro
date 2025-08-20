@@ -1,0 +1,37 @@
+---
+import { cn } from '@/lib/utils';
+import { cva } from 'class-variance-authority';
+import { overflowVariants } from '@/lib/component-variants';
+
+const ListItemsVariants = cva(
+    'flex flex-row w-full min-h-[2.5rem] items-center justify-between gap-2',
+    {
+        variants: {
+            overflow: overflowVariants,
+        },
+    }
+);
+
+export interface Props {
+    overflow?: 'auto' | 'fixed' | 'expand' | 'wrap' | 'show';
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    overflow = 'expand',
+    class: className = '',
+    ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps so they don't get passed to the div
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+const classes = cn(ListItemsVariants({ overflow }), className);
+---
+
+<template x-for={xFor} x-key={xKey}>
+    <div class={classes} {...restProps}>
+        <slot />
+    </div>
+</template>

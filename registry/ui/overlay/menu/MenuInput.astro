@@ -1,0 +1,53 @@
+---
+import { cn } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  placeholder?: string;
+  class?: string;
+  showIcon?: boolean;
+  searchModel?: string;
+  onNext?: string;
+  onPrevious?: string;
+  onSelect?: string;
+  onEscape?: string;
+  [key: string]: any;
+}
+
+const {
+  placeholder = 'Search...',
+  showIcon = true,
+  class: className,
+  searchModel = 'menuSearch',
+  onNext = 'itemActiveNext()',
+  onPrevious = 'itemActivePrevious()',
+  onSelect = 'selectActiveItem()',
+  onEscape = `${searchModel} = ''; activeIndex = 0`,
+  ...alpineProps
+} = Astro.props;
+
+const classes = cn(
+  'flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-0 border-0',
+  showIcon ? 'pl-1 pr-4' : 'px-3',
+  className
+);
+---
+
+<div class="flex items-center border-b px-3" cmdk-input-wrapper="">
+  {showIcon && (
+    <Icon name="lucide:search" class="mr-2 h-4 w-4 shrink-0 opacity-50" />
+  )}
+  <input
+    x-model={searchModel}
+    x-on:keydown.arrow-down.prevent={onNext}
+    x-on:keydown.arrow-up.prevent={onPrevious}
+    x-on:keydown.enter.prevent={onSelect}
+    x-on:keydown.escape={onEscape}
+    class={classes}
+    placeholder={placeholder}
+    role="combobox"
+    aria-expanded="true"
+    aria-autocomplete="list"
+    {...alpineProps}
+  />
+</div>

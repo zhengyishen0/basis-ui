@@ -1,0 +1,80 @@
+---
+import { cva } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const textareaVariants = cva(
+  "w-full px-3 py-2 text-sm rounded-md border border-input bg-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent/5 focus:border-primary disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+);
+
+export interface Props {
+  placeholder?: string;
+  value?: string;
+  disabled?: boolean;
+  readonly?: boolean;
+  required?: boolean;
+  name?: string;
+  id?: string;
+  rows?: number;
+  autoResize?: boolean;
+  className?: string;
+  // Alpine.js pass-through
+  [key: string]: any;
+}
+
+const { 
+  placeholder,
+  value = '',
+  disabled = false,
+  readonly = false,
+  required = false,
+  name,
+  id,
+  rows = 4,
+  autoResize = false,
+  className,
+  ...alpineProps
+} = Astro.props;
+
+// Auto-resize Alpine.js data if enabled
+const autoResizeData = autoResize ? {
+  'x-data': `{
+    resize() {
+      $el.style.height = 'auto';
+      $el.style.height = $el.scrollHeight + 'px';
+    }
+  }`,
+  'x-init': 'resize()',
+  '@input': 'resize()'
+} : {};
+
+// Merge auto-resize with alpine props
+const finalProps = { ...alpineProps, ...autoResizeData };
+---
+
+<!-- 
+Pine UI Textarea Component
+
+Usage:
+<Textarea placeholder="Enter your message" rows={4} />
+<Textarea autoResize placeholder="Auto-resizing textarea" />
+<Textarea disabled placeholder="Disabled textarea" />
+
+Features:
+- Auto-resize functionality (optional)
+- Universal theme styling
+- Alpine.js pass-through support
+- Clean and composable
+-->
+
+<textarea 
+  id={id}
+  name={name}
+  placeholder={placeholder}
+  value={value}
+  disabled={disabled}
+  readonly={readonly}
+  required={required}
+  rows={rows}
+  class={cn(textareaVariants(), className)}
+  {...finalProps}
+></textarea>

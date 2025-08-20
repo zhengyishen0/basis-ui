@@ -1,0 +1,36 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+    sticky?: boolean;
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const { sticky = true, class: className, ...alpineProps } = Astro.props;
+
+const headerClasses = cn(
+    sticky && 'fixed top-0 left-0 right-0 z-50',
+    'w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90'
+);
+
+const navClasses = cn(
+    'w-full px-4 flex items-center justify-between h-16',
+    className
+);
+---
+
+<header class={headerClasses} {...alpineProps}>
+    <nav class={navClasses}>
+        <div class="flex items-center gap-6">
+            <slot name="brand" />
+            <div class="hidden md:flex items-center space-x-6">
+                <slot name="links" />
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <slot name="actions" />
+        </div>
+    </nav>
+</header>

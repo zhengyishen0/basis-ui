@@ -1,0 +1,27 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+  shortcut?: string;
+  class?: string;
+  [key: string]: any;
+}
+
+const { shortcut, class: className, ...alpineProps } = Astro.props;
+
+const classes = cn(
+  'ml-auto text-xs tracking-widest text-muted-foreground',
+  className
+);
+
+// Extract Alpine.js directives
+const { 'x-text': xText, 'x-if': xIf, ...restProps } = alpineProps;
+---
+
+{shortcut ? (
+  <span class={classes} {...restProps}>{shortcut}</span>
+) : xText ? (
+  <span class={classes} x-text={xText} {...restProps}></span>
+) : (
+  <span class={classes} style="display: none;" {...restProps}></span>
+)}

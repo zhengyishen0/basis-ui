@@ -1,0 +1,458 @@
+---
+import Table from './Table.astro';
+import TableHeader from './TableHeader.astro';
+import TableBody from './TableBody.astro';
+import TableRow from './TableRow.astro';
+import TableHead from './TableHead.astro';
+import TableCell from './TableCell.astro';
+import { Icon } from 'astro-icon/components';
+import { cn } from '@/lib/utils';
+export interface Column {
+  key: string;
+  label: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  align?: 'left' | 'center' | 'right';
+  width?: string;
+  hidden?: boolean;
+  render?: (value: any, row: any) => string;
+}
+
+export interface Props {
+  variant?: 'default' | 'bordered' | 'striped' | 'hoverable';
+  density?: 'compact' | 'normal' | 'comfortable';
+  size?: 'sm' | 'md' | 'lg';
+  interactive?: 'none' | 'hover' | 'click';
+  responsive?: boolean;
+  data: any[];
+  columns: Column[];
+  searchable?: boolean;
+  selectable?: boolean;
+  paginated?: boolean;
+  pageSize?: number;
+  loading?: boolean;
+  emptyMessage?: string;
+  class?: string;
+}
+
+const {
+  data = [],
+  columns = [],
+  searchable = false,
+  selectable = false,
+  paginated = false,
+  pageSize = 10,
+  loading = false,
+  emptyMessage = "No data available",
+  variant = "default",
+  density = "normal",
+  interactive = selectable ? "hover" : "none",
+  size = "md",
+  responsive = true,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+
+// Generate unique table ID for Alpine.js store
+const tableId = `table_${Math.random().toString(36).substr(2, 9)}`;
+
+// Prepare initial state for Alpine.js - escape quotes properly
+const initialState = {
+  data,
+  columns,
+  pageSize,
+  searchable,
+  selectable,
+  paginated,
+  emptyMessage
+};
+
+const storeData = JSON.stringify(initialState).replace(/'/g, "\\'");
+---
+
+<script is:inline>
+  // Make createTableStore globally available for Alpine.js
+  if (typeof window !== 'undefined') {
+    window.createTableStore = (initialData = {}) => ({
+      // Core data
+      data: initialData.data || [],
+      columns: initialData.columns || [],
+      emptyMessage: initialData.emptyMessage || 'No data available',
+      
+      // State management
+      filteredData: [],
+      sortBy: null,
+      sortDirection: 'asc',
+      searchQuery: '',
+      selectedRows: new Set(),
+      
+      // Pagination
+      currentPage: 1,
+      pageSize: initialData.pageSize || 10,
+      
+      // UI state
+      isLoading: false,
+      selectAll: false,
+      
+      // Configuration
+      searchable: initialData.searchable || false,
+      selectable: initialData.selectable || false,
+      paginated: initialData.paginated || false,
+      
+      // Initialization
+      init() {
+        this.filteredData = [...this.data];
+        // Initialize column visibility
+        this.columns = this.columns.map(col => ({
+          ...col,
+          hidden: col.hidden || false
+        }));
+        if (this.selectable) {
+          this.updateSelectAllState();
+        }
+      },
+      
+      // Computed properties
+      get paginatedData() {
+        if (!this.paginated) return this.filteredData;
+        const start = (this.currentPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        return this.filteredData.slice(start, end);
+      },
+      
+      get totalPages() {
+        return Math.ceil(this.filteredData.length / this.pageSize);
+      },
+      
+      get hasData() {
+        return this.filteredData.length > 0;
+      },
+      
+      get selectedCount() {
+        return this.selectedRows.size;
+      },
+      
+      get hasSelection() {
+        return this.selectedRows.size > 0;
+      },
+      
+      get visibleColumns() {
+        return this.columns.filter(col => !col.hidden);
+      },
+      
+      // Sorting functionality
+      sort(columnKey) {
+        if (this.sortBy === columnKey) {
+          this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          this.sortBy = columnKey;
+          this.sortDirection = 'asc';
+        }
+        
+        this.filteredData.sort((a, b) => {
+          let aVal = a[columnKey];
+          let bVal = b[columnKey];
+          
+          if (typeof aVal === 'string') {
+            aVal = aVal.toLowerCase();
+            bVal = bVal.toLowerCase();
+          }
+          
+          if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
+          if (aVal > bVal) return this.sortDirection === 'asc' ? 1 : -1;
+          return 0;
+        });
+        
+        this.currentPage = 1;
+      },
+      
+      // Filtering functionality
+      filter(query = null) {
+        const searchTerm = (query !== null ? query : this.searchQuery).toLowerCase();
+        
+        if (!searchTerm) {
+          this.filteredData = [...this.data];
+        } else {
+          this.filteredData = this.data.filter(row =>
+            Object.values(row).some(value =>
+              String(value).toLowerCase().includes(searchTerm)
+            )
+          );
+        }
+        
+        this.currentPage = 1;
+        this.updateSelectAllState();
+      },
+      
+      // Pagination functionality
+      goToPage(page) {
+        if (page >= 1 && page <= this.totalPages) {
+          this.currentPage = page;
+        }
+      },
+      
+      nextPage() {
+        this.goToPage(this.currentPage + 1);
+      },
+      
+      previousPage() {
+        this.goToPage(this.currentPage - 1);
+      },
+      
+      setPageSize(size) {
+        this.pageSize = size;
+        this.currentPage = 1;
+      },
+      
+      // Selection functionality
+      toggleRowSelection(rowId) {
+        if (this.selectedRows.has(rowId)) {
+          this.selectedRows.delete(rowId);
+        } else {
+          this.selectedRows.add(rowId);
+        }
+        this.updateSelectAllState();
+      },
+      
+      toggleSelectAll() {
+        if (this.selectAll) {
+          this.selectedRows.clear();
+        } else {
+          this.paginatedData.forEach(row => {
+            if (row.id) this.selectedRows.add(row.id);
+          });
+        }
+        this.updateSelectAllState();
+      },
+      
+      updateSelectAllState() {
+        if (!this.selectable) return;
+        const visibleIds = this.paginatedData.filter(row => row.id).map(row => row.id);
+        this.selectAll = visibleIds.length > 0 && visibleIds.every(id => this.selectedRows.has(id));
+      },
+      
+      clearSelection() {
+        this.selectedRows.clear();
+        this.selectAll = false;
+      },
+      
+      // Utility methods
+      isRowSelected(rowId) {
+        return this.selectedRows.has(rowId);
+      },
+      
+      getSortIcon(columnKey) {
+        if (this.sortBy !== columnKey) return 'unsorted';
+        return this.sortDirection === 'asc' ? 'asc' : 'desc';
+      },
+      
+      // Column visibility
+      toggleColumn(columnKey) {
+        const column = this.columns.find(col => col.key === columnKey);
+        if (column) {
+          column.hidden = !column.hidden;
+        }
+      },
+      
+      showColumn(columnKey) {
+        const column = this.columns.find(col => col.key === columnKey);
+        if (column) {
+          column.hidden = false;
+        }
+      },
+      
+      hideColumn(columnKey) {
+        const column = this.columns.find(col => col.key === columnKey);
+        if (column) {
+          column.hidden = true;
+        }
+      },
+      
+      // Data manipulation
+      updateData(newData) {
+        this.data = newData;
+        this.filter();
+        this.clearSelection();
+      },
+      
+      refreshData() {
+        this.isLoading = true;
+        this.$dispatch('table-refresh');
+      }
+    });
+  }
+</script>
+
+<div 
+  class={cn("w-full space-y-4", className)}
+  x-data={`createTableStore(${storeData})`}
+  x-init="init()"
+>
+  <!-- Toolbar slot -->
+  <div x-show="searchable || $slots.toolbar" class="flex items-center justify-between">
+    <slot name="toolbar">
+      {searchable && (
+        <div class="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder="Search..."
+            class="px-3 py-2 border border-input rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            x-model="searchQuery"
+            x-on:input.debounce.300="filter()"
+          />
+        </div>
+      )}
+    </slot>
+  </div>
+
+  <!-- Loading state -->
+  <div x-show="isLoading" class="flex items-center justify-center py-8">
+    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+  </div>
+
+  <!-- Table container -->
+  <div x-show="!isLoading">
+    <Table 
+      variant={variant}
+      density={density}
+      interactive={interactive}
+      size={size}
+      responsive={responsive}
+      {...alpineProps}
+    >
+      <TableHeader>
+        <TableRow>
+          <template x-if="selectable">
+            <th class="h-12 px-4 text-center align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 w-12">
+              <input
+                type="checkbox"
+                class="rounded border-input"
+                x-model="selectAll"
+                x-on:change="toggleSelectAll()"
+              />
+            </th>
+          </template>
+          
+          <template x-for="column in columns" x-key="column.key">
+            <th 
+              x-show="!column.hidden"
+              class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 cursor-pointer hover:bg-accent/50 transition-colors"
+              x-bind:class="{
+                'text-center': column.align === 'center',
+                'text-right': column.align === 'right',
+                [`w-${column.width}`]: column.width
+              }"
+              x-on:click="column.sortable ? sort(column.key) : null"
+            >
+              <div class="flex items-center gap-2" x-bind:class="{
+                'justify-center': column.align === 'center',
+                'justify-end': column.align === 'right'
+              }">
+                <span x-text="column.label"></span>
+                <template x-if="column.sortable">
+                  <div class="h-4 w-4 opacity-50" x-bind:class="{ 'opacity-100': sortBy === column.key }">
+                    <!-- Using Lucide SVG paths for consistency -->
+                    <svg x-show="sortBy !== column.key" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+                    <svg x-show="sortBy === column.key && sortDirection === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 9 5-5 5 5"/></svg>
+                    <svg x-show="sortBy === column.key && sortDirection === 'desc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/></svg>
+                  </div>
+                </template>
+              </div>
+            </th>
+          </template>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        <!-- No data state -->
+        <template x-if="!hasData">
+          <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+            <td 
+              class="py-8 text-center text-muted-foreground p-4 align-middle [&:has([role=checkbox])]:pr-0"
+              x-bind:colspan="selectable ? visibleColumns.length + 1 : visibleColumns.length"
+              x-text="emptyMessage"
+            >
+            </td>
+          </tr>
+        </template>
+
+        <!-- Data rows -->
+        <template x-for="(row, index) in paginatedData" x-key="row.id || index">
+          <tr 
+            class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+            x-bind:class="{ 'bg-muted/50': selectable && isRowSelected(row.id) }"
+          >
+            <template x-if="selectable">
+              <td class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-center">
+                <input
+                  type="checkbox"
+                  class="rounded border-input"
+                  x-bind:checked="isRowSelected(row.id)"
+                  x-on:change="toggleRowSelection(row.id)"
+                />
+              </td>
+            </template>
+            
+            <template x-for="column in columns" x-key="column.key">
+              <td 
+                x-show="!column.hidden"
+                class="p-4 align-middle [&:has([role=checkbox])]:pr-0 text-sm"
+                x-bind:class="{
+                  'text-center': column.align === 'center',
+                  'text-right': column.align === 'right'
+                }"
+              >
+                <template x-if="column.render">
+                  <span x-html="column.render(row[column.key], row)"></span>
+                </template>
+                <template x-if="!column.render">
+                  <span x-text="row[column.key]"></span>
+                </template>
+              </td>
+            </template>
+          </tr>
+        </template>
+      </TableBody>
+    </Table>
+  </div>
+
+  <!-- Pagination slot -->
+  <div x-show="paginated && hasData" class="flex items-center justify-between">
+    <slot name="pagination">
+      <div class="flex items-center space-x-2">
+        <span class="text-sm text-muted-foreground" x-text="`Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, filteredData.length)} of ${filteredData.length} entries`"></span>
+      </div>
+      
+      <div class="flex items-center space-x-2">
+        <button
+          class="px-3 py-1 text-sm border border-input rounded-md bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+          x-on:click="previousPage()"
+          x-bind:disabled="currentPage <= 1"
+        >
+          Previous
+        </button>
+        
+        <span class="text-sm text-muted-foreground" x-text="`Page ${currentPage} of ${totalPages}`"></span>
+        
+        <button
+          class="px-3 py-1 text-sm border border-input rounded-md bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+          x-on:click="nextPage()"
+          x-bind:disabled="currentPage >= totalPages"
+        >
+          Next
+        </button>
+      </div>
+    </slot>
+  </div>
+
+  <!-- Selection info -->
+  <div x-show="selectable && hasSelection" class="flex items-center justify-between p-3 bg-muted rounded-md">
+    <span class="text-sm text-muted-foreground" x-text="`${selectedCount} row(s) selected`"></span>
+    <button
+      class="text-sm text-primary hover:underline"
+      x-on:click="clearSelection()"
+    >
+      Clear selection
+    </button>
+  </div>
+</div>

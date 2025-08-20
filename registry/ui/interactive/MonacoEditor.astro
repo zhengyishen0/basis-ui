@@ -1,0 +1,390 @@
+---
+export interface Props {
+  id?: string;
+  value?: string;
+  language?: string;
+  theme?: 'vs-dark' | 'vs-light' | 'hc-black';
+  fontSize?: number;
+  lineNumbers?: 'on' | 'off' | 'relative' | 'interval';
+  wordWrap?: 'on' | 'off' | 'wordWrapColumn' | 'bounded';
+  minimap?: boolean;
+  readOnly?: boolean;
+  placeholder?: string;
+  height?: string;
+  width?: string;
+  autoResize?: boolean;
+  class?: string;
+  editorClass?: string;
+  name?: string;
+}
+
+const { 
+  id = `monaco-editor-${Math.random().toString(36).substr(2, 9)}`,
+  value = '',
+  language = 'javascript',
+  theme = 'vs-dark',
+  fontSize = 14,
+  lineNumbers = 'on',
+  wordWrap = 'off',
+  minimap = true,
+  readOnly = false,
+  placeholder = 'Start typing...',
+  height = '400px',
+  width = '100%',
+  autoResize = true,
+  class: className = "",
+  editorClass = "",
+  name = 'code'
+} = Astro.props;
+---
+
+<!-- 
+Pine UI Monaco Editor Component
+
+Usage:
+<MonacoEditor 
+  id="code-editor"
+  value="console.log('Hello World');"
+  language="javascript"
+  theme="vs-dark"
+  fontSize={16}
+  height="500px"
+/>
+
+<MonacoEditor 
+  value="# Hello World\n\nThis is **markdown** content."
+  language="markdown"
+  theme="vs-light"
+  readOnly={true}
+  placeholder="Enter markdown content..."
+/>
+
+<MonacoEditor 
+  language="python"
+  placeholder="def hello_world():\n    print('Hello, World!')"
+  wordWrap="on"
+  minimap={false}
+  autoResize={true}
+/>
+
+Features:
+- Full Monaco Editor integration with syntax highlighting
+- Support for 50+ programming languages
+- Multiple themes (vs-dark, vs-light, hc-black)
+- Customizable font size, line numbers, word wrap
+- Minimap toggle and read-only mode
+- Placeholder text functionality
+- Auto-resize capabilities
+- Two-way data binding with Alpine.js
+- Language switching support
+- Keyboard shortcuts and IntelliSense
+- Find/Replace functionality built-in
+
+Supported Languages:
+javascript, typescript, python, html, css, json, markdown, sql, xml, yaml, 
+java, c, cpp, csharp, php, ruby, go, rust, swift, kotlin, scala, and more...
+
+Themes:
+- vs-dark: Dark theme (default)
+- vs-light: Light theme
+- hc-black: High contrast black theme
+-->
+
+<div 
+  x-data="{
+    monacoEditor: null,
+    monacoContent: $persist('${value}'),
+    monacoLanguage: '${language}',
+    monacoTheme: '${theme}',
+    monacoFontSize: ${fontSize},
+    monacoLineNumbers: '${lineNumbers}',
+    monacoWordWrap: '${wordWrap}',
+    monacoMinimap: ${minimap},
+    monacoReadOnly: ${readOnly},
+    monacoPlaceholder: '${placeholder}',
+    monacoHeight: '${height}',
+    monacoWidth: '${width}',
+    monacoAutoResize: ${autoResize},
+    monacoLoaded: false,
+    monacoError: null,
+
+    async monacoInit() {
+      try {
+        // Load Monaco Editor from CDN
+        if (!window.monaco) {
+          await this.monacoLoadScript();
+        }
+        
+        // Wait for Monaco to be fully loaded
+        if (window.monaco) {
+          this.monacoCreateEditor();
+        } else {
+          this.monacoError = 'Failed to load Monaco Editor';
+        }
+      } catch (error) {
+        this.monacoError = 'Error initializing Monaco Editor: ' + error.message;
+        console.error('Monaco Editor Error:', error);
+      }
+    },
+
+    async monacoLoadScript() {
+      return new Promise((resolve, reject) => {
+        // Check if already loaded
+        if (window.monaco) {
+          resolve();
+          return;
+        }
+
+        // Create script element for Monaco loader
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/monaco-editor@latest/min/vs/loader.js';
+        script.onload = () => {
+          // Configure Monaco paths
+          window.require.config({ 
+            paths: { 
+              'vs': 'https://unpkg.com/monaco-editor@latest/min/vs' 
+            } 
+          });
+          
+          // Load Monaco Editor
+          window.require(['vs/editor/editor.main'], () => {
+            resolve();
+          }, (error) => {
+            reject(error);
+          });
+        };
+        script.onerror = () => reject(new Error('Failed to load Monaco script'));
+        document.head.appendChild(script);
+      });
+    },
+
+    monacoCreateEditor() {
+      const container = this.$refs.monacoContainer;
+      if (!container) return;
+
+      // Create editor instance
+      this.monacoEditor = window.monaco.editor.create(container, {
+        value: this.monacoContent || this.monacoPlaceholder,
+        language: this.monacoLanguage,
+        theme: this.monacoTheme,
+        fontSize: this.monacoFontSize,
+        lineNumbers: this.monacoLineNumbers,
+        wordWrap: this.monacoWordWrap,
+        minimap: { enabled: this.monacoMinimap },
+        readOnly: this.monacoReadOnly,
+        automaticLayout: this.monacoAutoResize,
+        scrollBeyondLastLine: false,
+        renderLineHighlight: 'all',
+        selectOnLineNumbers: true,
+        roundedSelection: false,
+        cursorStyle: 'line',
+        contextmenu: true,
+        mouseWheelZoom: true,
+        quickSuggestions: true,
+        parameterHints: { enabled: true },
+        formatOnPaste: true,
+        formatOnType: true,
+        suggestOnTriggerCharacters: true,
+        acceptSuggestionOnEnter: 'on',
+        tabCompletion: 'on',
+        wordBasedSuggestions: true,
+      });
+
+      // Handle content changes
+      this.monacoEditor.onDidChangeModelContent(() => {
+        this.monacoContent = this.monacoEditor.getValue();
+        this.monacoDispatchChange();
+      });
+
+      // Handle focus events
+      this.monacoEditor.onDidFocusEditorText(() => {
+        this.monacoDispatchEvent('focus');
+      });
+
+      this.monacoEditor.onDidBlurEditorText(() => {
+        this.monacoDispatchEvent('blur');
+      });
+
+      // Clear placeholder if content is added
+      if (this.monacoContent && this.monacoContent !== this.monacoPlaceholder) {
+        this.monacoEditor.setValue(this.monacoContent);
+      }
+
+      this.monacoLoaded = true;
+      this.monacoDispatchEvent('ready');
+    },
+
+    monacoSetValue(value) {
+      if (this.monacoEditor) {
+        this.monacoEditor.setValue(value || '');
+        this.monacoContent = value || '';
+      }
+    },
+
+    monacoGetValue() {
+      return this.monacoEditor ? this.monacoEditor.getValue() : this.monacoContent;
+    },
+
+    monacoSetLanguage(language) {
+      if (this.monacoEditor && window.monaco) {
+        window.monaco.editor.setModelLanguage(this.monacoEditor.getModel(), language);
+        this.monacoLanguage = language;
+      }
+    },
+
+    monacoSetTheme(theme) {
+      if (window.monaco) {
+        window.monaco.editor.setTheme(theme);
+        this.monacoTheme = theme;
+      }
+    },
+
+    monacoSetFontSize(size) {
+      if (this.monacoEditor) {
+        this.monacoEditor.updateOptions({ fontSize: size });
+        this.monacoFontSize = size;
+      }
+    },
+
+    monacoToggleMinimap() {
+      if (this.monacoEditor) {
+        this.monacoMinimap = !this.monacoMinimap;
+        this.monacoEditor.updateOptions({ 
+          minimap: { enabled: this.monacoMinimap } 
+        });
+      }
+    },
+
+    monacoToggleWordWrap() {
+      if (this.monacoEditor) {
+        this.monacoWordWrap = this.monacoWordWrap === 'on' ? 'off' : 'on';
+        this.monacoEditor.updateOptions({ wordWrap: this.monacoWordWrap });
+      }
+    },
+
+    monacoFormat() {
+      if (this.monacoEditor) {
+        this.monacoEditor.getAction('editor.action.formatDocument').run();
+      }
+    },
+
+    monacoResize() {
+      if (this.monacoEditor) {
+        this.monacoEditor.layout();
+      }
+    },
+
+    monacoDestroy() {
+      if (this.monacoEditor) {
+        this.monacoEditor.dispose();
+        this.monacoEditor = null;
+        this.monacoLoaded = false;
+      }
+    },
+
+    monacoDispatchChange() {
+      this.$dispatch('monaco-change', {
+        value: this.monacoContent,
+        language: this.monacoLanguage,
+        editor: this.monacoEditor
+      });
+    },
+
+    monacoDispatchEvent(eventType) {
+      this.$dispatch('monaco-' + eventType, {
+        value: this.monacoContent,
+        language: this.monacoLanguage,
+        editor: this.monacoEditor
+      });
+    }
+  }"
+  x-init="monacoInit()"
+  @resize.window="monacoAutoResize && monacoResize()"
+  class={`monaco-editor-wrapper relative ${className}`}
+>
+  <!-- Hidden input for form submission -->
+  <input 
+    type="hidden" 
+    :name="'${name}'" 
+    x-model="monacoContent"
+  />
+
+  <!-- Loading State -->
+  <div 
+    x-show="!monacoLoaded && !monacoError" 
+    class="flex items-center justify-center bg-gray-100 border border-gray-300 rounded"
+    :style="`height: ${monacoHeight}; width: ${monacoWidth}`"
+  >
+    <div class="flex items-center space-x-2 text-gray-600">
+      <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      <span class="text-sm">Loading Monaco Editor...</span>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div 
+    x-show="monacoError" 
+    class="flex flex-col items-center justify-center bg-red-50 border border-red-300 rounded p-4"
+    :style="`height: ${monacoHeight}; width: ${monacoWidth}`"
+  >
+    <div class="text-red-600 text-center">
+      <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <p class="text-sm font-medium">Failed to load Monaco Editor</p>
+      <p class="text-xs mt-1" x-text="monacoError"></p>
+    </div>
+    <button 
+      @click="monacoInit()" 
+      class="mt-3 px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200"
+    >
+      Retry
+    </button>
+  </div>
+
+  <!-- Monaco Editor Container -->
+  <div 
+    x-show="monacoLoaded"
+    x-ref="monacoContainer"
+    class={`monaco-editor-container border border-gray-300 rounded overflow-hidden ${editorClass}`}
+    :style="`height: ${monacoHeight}; width: ${monacoWidth}`"
+  ></div>
+
+  <!-- Editor Controls (Optional) -->
+  <div 
+    x-show="monacoLoaded" 
+    class="flex items-center justify-between mt-2 text-xs text-gray-600"
+  >
+    <div class="flex items-center space-x-4">
+      <span>Language: <span x-text="monacoLanguage" class="font-medium"></span></span>
+      <span>Lines: <span x-text="monacoEditor ? monacoEditor.getModel().getLineCount() : 0" class="font-medium"></span></span>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button 
+        @click="monacoFormat()" 
+        class="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors duration-200"
+        title="Format Document (Alt+Shift+F)"
+      >
+        Format
+      </button>
+      <button 
+        @click="monacoToggleMinimap()" 
+        class="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors duration-200"
+        :class="{ 'bg-blue-100 text-blue-600': monacoMinimap }"
+        title="Toggle Minimap"
+      >
+        Minimap
+      </button>
+      <button 
+        @click="monacoToggleWordWrap()" 
+        class="px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors duration-200"
+        :class="{ 'bg-blue-100 text-blue-600': monacoWordWrap === 'on' }"
+        title="Toggle Word Wrap"
+      >
+        Wrap
+      </button>
+    </div>
+  </div>
+</div>

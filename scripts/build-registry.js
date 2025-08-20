@@ -2,136 +2,139 @@
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
-import { COMPONENT_CATEGORIES } from "./sync.js";
+import { glob } from "glob";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const REGISTRY_DIR = path.join(__dirname, "../registry");
+const UI_DIR = path.join(REGISTRY_DIR, "ui");
 const OUTPUT_FILE = path.join(REGISTRY_DIR, "index.json");
 
-// Component dependency mapping
-const COMPONENT_DEPENDENCIES = {
-  // Base dependencies for most components
-  base: [
-    "class-variance-authority@^0.7.1",
-    "clsx@^2.1.1",
-    "tailwind-merge@^3.3.1",
-  ],
-
-  // Alpine.js plugins
-  alpine: {
-    "data-table": ["@alpinejs/sort@^3.14.9", "@alpinejs/persist@^3.14.9"],
-    "command": ["@alpinejs/focus@^3.14.9"],
-    "dropdown-menu": ["@alpinejs/focus@^3.14.9"],
-    "dialog": ["@alpinejs/focus@^3.14.9"],
-    "text-input": ["@alpinejs/mask@^3.14.9"],
-    "carousel": ["@alpinejs/intersect@^3.14.9"],
-    "accordion": ["@alpinejs/collapse@^3.14.9"],
-    "tabs": ["@alpinejs/anchor@^3.14.9"],
-  },
-
-  // Supabase for data components
-  supabase: {
-    "data-table": ["@supabase/supabase-js@^2.51.0"],
-  },
-
-  // Icon dependencies
-  icons: ["@iconify-json/lucide@^1.2.62", "astro-icon@^1.1.5"],
+// Common NPM dependencies found in UI components
+const COMMON_DEPENDENCIES = {
+  // Base dependencies
+  'class-variance-authority': '^0.7.1',
+  'clsx': '^2.1.1', 
+  'tailwind-merge': '^3.3.1',
+  
+  // Alpine.js and plugins
+  'alpinejs': '^3.14.9',
+  '@alpinejs/anchor': '^3.14.9',
+  '@alpinejs/collapse': '^3.14.9',
+  '@alpinejs/focus': '^3.14.9',
+  '@alpinejs/intersect': '^3.14.9',
+  '@alpinejs/mask': '^3.14.9',
+  '@alpinejs/morph': '^3.14.9',
+  '@alpinejs/persist': '^3.14.9',
+  '@alpinejs/resize': '^3.14.9',
+  '@alpinejs/sort': '^3.14.9',
+  
+  // External services
+  '@supabase/supabase-js': '^2.51.0',
+  
+  // Icons
+  '@iconify-json/lucide': '^1.2.62',
+  'astro-icon': '^1.1.5',
 };
 
-// Registry dependencies (internal components/utils)
-const REGISTRY_DEPENDENCIES = {
-  "utils": [],
-  "component-variants": ["utils"],
-
-  // Components that depend on other components
-  "data-table": ["table", "button", "text-input", "pagination"],
-  "banner": ["button"],
-  "dialog": ["button"],
-  "card": ["button"],
-  "accordion": ["button"],
-  "tabs": ["button"],
-  "command": ["text-input"],
-  "table": ["checkbox", "button"],
-  "navigation-menu": ["button"],
-};
-
-function getComponentDependencies(componentName) {
-  const deps = [...COMPONENT_DEPENDENCIES.base];
-
-  // Add Alpine.js plugins
-  if (COMPONENT_DEPENDENCIES.alpine[componentName]) {
-    deps.push(...COMPONENT_DEPENDENCIES.alpine[componentName]);
-  }
-
-  // Add Supabase if needed
-  if (COMPONENT_DEPENDENCIES.supabase[componentName]) {
-    deps.push(...COMPONENT_DEPENDENCIES.supabase[componentName]);
-  }
-
-  // Add icons for display components
-  if (
-    ["avatar", "card", "accordion", "button", "alert", "banner"].includes(
-      componentName
-    )
-  ) {
-    deps.push(...COMPONENT_DEPENDENCIES.icons);
-  }
-
-  return [...new Set(deps)]; // Remove duplicates
+// Extract import statements from file content
+function extractImports(content) {
+  const imports = new Set();
+  
+  // Match various import patterns
+  const importRegexes = [
+    /from ['"]([^'"]+)['"]/g,
+    /import ['"]([^'"]+)['"]/g,
+  ];
+  
+  importRegexes.forEach(regex => {
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      const importPath = match[1];
+      // Only include external packages (not relative imports)
+      if (!importPath.startsWith('.') && !importPath.startsWith('/') && !importPath.startsWith('@/')) {
+        imports.add(importPath);
+      }
+    }
+  });
+  
+  return Array.from(imports);
 }
 
-function getRegistryDependencies(componentName) {
-  const deps = ["utils", "component-variants"];
-
-  if (REGISTRY_DEPENDENCIES[componentName]) {
-    deps.push(...REGISTRY_DEPENDENCIES[componentName]);
-  }
-
-  return [...new Set(deps)];
+// Get NPM dependencies for a list of imports
+function getDependenciesFromImports(imports) {
+  const dependencies = [];
+  
+  imports.forEach(importPath => {
+    // Get the package name (handle scoped packages)
+    const packageName = importPath.startsWith('@') 
+      ? importPath.split('/').slice(0, 2).join('/') 
+      : importPath.split('/')[0];
+      
+    if (COMMON_DEPENDENCIES[packageName]) {
+      dependencies.push(`${packageName}@${COMMON_DEPENDENCIES[packageName]}`);
+    }
+  });
+  
+  return [...new Set(dependencies)]; // Remove duplicates
 }
 
-function getComponentFiles(category, component) {
-  const files = [];
-
-  if (component.files) {
-    // Multi-file component
-    component.files.forEach((file) => {
-      files.push({
-        path: `components/${component.name}/${file}`,
-        type: "component",
-      });
-    });
-  } else {
-    // Single file component
-    const fileName = path.basename(component.source);
-    files.push({
-      path: `components/${component.name}/${fileName}`,
-      type: "component",
-    });
+// Scan ui/ folder and extract dependencies from files
+async function scanUiFolder() {
+  console.log('🔍 Scanning ui/ folder for dependencies...');
+  
+  if (!await fs.pathExists(UI_DIR)) {
+    console.error(`❌ UI directory not found: ${UI_DIR}`);
+    console.error('Please run the sync script first to copy the ui/ folder.');
+    process.exit(1);
   }
-
-  // Add stores if specified
-  if (component.stores) {
-    component.stores.forEach((store) => {
-      files.push({
-        path: `components/${component.name}/${store}`,
-        type: "store",
-      });
-    });
+  
+  // Get all .astro, .js, .ts files in the ui/ directory
+  const files = await glob('**/*.{astro,js,ts,jsx,tsx}', { cwd: UI_DIR });
+  const allImports = new Set();
+  
+  // Extract imports from all files
+  for (const file of files) {
+    const filePath = path.join(UI_DIR, file);
+    const content = await fs.readFile(filePath, 'utf-8');
+    const imports = extractImports(content);
+    imports.forEach(imp => allImports.add(imp));
   }
-
-  return files;
+  
+  // Get dependencies from imports
+  const dependencies = getDependenciesFromImports(Array.from(allImports));
+  
+  console.log(`📦 Found ${dependencies.length} external dependencies`);
+  console.log(`📁 Scanned ${files.length} files`);
+  
+  return {
+    dependencies,
+    allImports: Array.from(allImports),
+    fileCount: files.length
+  };
 }
 
 async function buildRegistry() {
   console.log("🔨 Building component registry...\n");
 
+  // Scan the ui/ folder for dependencies
+  const scanResult = await scanUiFolder();
+  
   const registry = {
     $schema: "https://basis.zhengyishen.com/registry-schema.json",
     version: "1.0.0",
-    components: {},
+    ui: {
+      name: "ui",
+      description: "Complete UI component library for Astro + Alpine.js",
+      dependencies: scanResult.dependencies,
+      files: [
+        {
+          path: "ui",
+          type: "folder"
+        }
+      ]
+    },
     lib: {
       "utils": {
         name: "utils",
@@ -139,9 +142,9 @@ async function buildRegistry() {
         files: [
           {
             path: "lib/utils.ts",
-            type: "lib",
-          },
-        ],
+            type: "lib"
+          }
+        ]
       },
       "component-variants": {
         name: "component-variants",
@@ -151,50 +154,25 @@ async function buildRegistry() {
         files: [
           {
             path: "lib/component-variants.ts",
-            type: "lib",
-          },
-        ],
-      },
-    },
-  };
-
-  // Build components
-  for (const [categoryName, components] of Object.entries(
-    COMPONENT_CATEGORIES
-  )) {
-    console.log(`📁 Processing ${categoryName}...`);
-
-    for (const component of components) {
-      const componentDir = path.join(
-        REGISTRY_DIR,
-        "components",
-        component.name
-      );
-
-      // Check if component exists
-      if (await fs.pathExists(componentDir)) {
-        registry.components[component.name] = {
-          name: component.name,
-          category: categoryName,
-          description: generateDescription(component.name, categoryName),
-          dependencies: getComponentDependencies(component.name),
-          registryDependencies: getRegistryDependencies(component.name),
-          files: getComponentFiles(categoryName, component),
-        };
-
-        console.log(`  ✓ ${component.name}`);
-      } else {
-        console.warn(`  ⚠ Missing component directory: ${component.name}`);
+            type: "lib"
+          }
+        ]
       }
+    },
+    meta: {
+      extractedImports: scanResult.allImports,
+      scannedFiles: scanResult.fileCount,
+      lastUpdated: new Date().toISOString()
     }
-  }
+  };
 
   // Write registry file
   await fs.writeJson(OUTPUT_FILE, registry, { spaces: 2 });
 
   console.log(`\n✅ Registry built successfully!`);
   console.log(`📝 Generated: ${OUTPUT_FILE}`);
-  console.log(`📊 Components: ${Object.keys(registry.components).length}`);
+  console.log(`📦 Dependencies: ${scanResult.dependencies.length}`);
+  console.log(`📁 Files scanned: ${scanResult.fileCount}`);
 }
 
 function generateDescription(componentName, category) {

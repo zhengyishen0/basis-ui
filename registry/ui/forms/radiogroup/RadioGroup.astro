@@ -1,0 +1,93 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { overflowVariants } from '@/lib/component-variants';
+
+const radioGroupVariants = cva('radio-group', {
+    variants: {
+        orientation: {
+            vertical: 'space-y-3',
+            horizontal: 'flex flex-wrap gap-4',
+        },
+        maxWidth: {
+            sm: 'max-w-sm',
+            md: 'max-w-md',
+            lg: 'max-w-lg',
+            xl: 'max-w-xl',
+            full: 'max-w-full',
+        },
+        centered: {
+            true: 'mx-auto',
+            false: '',
+        },
+        overflow: overflowVariants
+    }
+});
+
+export interface Props extends VariantProps<typeof radioGroupVariants> {
+    name: string;
+    selectedOption?: string;
+    disabled?: boolean;
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    name,
+    selectedOption = '',
+    disabled = false,
+    orientation = 'vertical',
+    maxWidth = 'full',
+    centered = false,
+    overflow = 'fixed',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+
+const defaultXData = `{
+    selectedOption: '${selectedOption}',
+    name: '${name}',
+    disabled: ${disabled},
+    setSelectedOption(value) {
+        if (!this.disabled) {
+            this.selectedOption = value;
+            console.log('Selected option changed:', value);
+        }
+    }
+}`;
+---
+
+<!-- 
+RadioGroup Root Component - Composable approach
+
+Usage:
+<RadioGroup name="plan" selectedOption="basic">
+    <RadioGroupItem value="basic">
+        <RadioGroupLabel>Basic Plan</RadioGroupLabel>
+        <RadioGroupDescription>Perfect for small teams</RadioGroupDescription>
+    </RadioGroupItem>
+    <RadioGroupItem value="pro">
+        <RadioGroupLabel>Pro Plan</RadioGroupLabel>
+        <RadioGroupDescription>Best for growing businesses</RadioGroupDescription>
+    </RadioGroupItem>
+</RadioGroup>
+
+Features:
+- Composable architecture like accordion
+- Alpine.js state management
+- Flexible layouts (vertical/horizontal)
+- Shared context for child components
+-->
+
+<div
+    x-data={defaultXData}
+    x-modelable="selectedOption"
+    role="radiogroup"
+    {...alpineProps}
+    class={cn(
+        radioGroupVariants({ orientation, maxWidth, centered, overflow }),
+        className
+    )}
+>
+    <slot />
+</div>

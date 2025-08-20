@@ -1,0 +1,29 @@
+---
+import NavigationMenuLink from './NavigationMenuLink.astro';
+
+export interface Props {
+  className?: string;
+  variant?: 'default' | 'active';
+  disabled?: boolean;
+  [key: string]: any;
+}
+
+const {
+  className,
+  variant,
+  disabled,
+  ...alpineProps
+} = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+// Component props to pass down to NavigationMenuLink
+const linkProps = { className, variant, disabled };
+---
+
+<template x-for={xFor} x-key={xKey || 'link.id'}>
+  <NavigationMenuLink {...linkProps} {...restProps}>
+    <slot />
+  </NavigationMenuLink>
+</template>

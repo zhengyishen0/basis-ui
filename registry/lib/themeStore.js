@@ -3,42 +3,38 @@
  * Manages dark/light/system theme preferences with localStorage persistence
  */
 export const themeStore = {
-    current: 'system',
+    current: 'light',
     
     /**
      * Initialize theme from localStorage and apply
      */
     init() {
-        this.current = localStorage.getItem('theme') || 'system';
-        this.apply();
-        
-        // Listen for system theme changes when in system mode
-        if (this.current === 'system') {
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                if (this.current === 'system') {
-                    this.apply();
-                }
-            });
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
+            this.current = savedTheme;
+        } else {
+            // Auto-detect initial theme based on system preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            this.current = prefersDark ? 'dark' : 'light';
         }
+        this.apply();
     },
     
     /**
-     * Toggle between light -> dark -> system -> light
+     * Toggle between light and dark
      */
     toggle() {
-        const themes = ['light', 'dark', 'system'];
-        const currentIndex = themes.indexOf(this.current);
-        this.current = themes[(currentIndex + 1) % themes.length];
+        this.current = this.current === 'light' ? 'dark' : 'light';
         this.save();
         this.apply();
     },
     
     /**
      * Set specific theme
-     * @param {string} theme - 'light', 'dark', or 'system'
+     * @param {string} theme - 'light' or 'dark'
      */
     set(theme) {
-        if (['light', 'dark', 'system'].includes(theme)) {
+        if (['light', 'dark'].includes(theme)) {
             this.current = theme;
             this.save();
             this.apply();
@@ -51,13 +47,7 @@ export const themeStore = {
     apply() {
         const root = document.documentElement;
         root.classList.remove('light', 'dark');
-        
-        if (this.current === 'system') {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            root.classList.add(prefersDark ? 'dark' : 'light');
-        } else {
-            root.classList.add(this.current);
-        }
+        root.classList.add(this.current);
     },
     
     /**
@@ -68,12 +58,9 @@ export const themeStore = {
     },
     
     /**
-     * Get the resolved theme (actual light/dark, never system)
+     * Get the resolved theme (actual light/dark)
      */
     get resolved() {
-        if (this.current === 'system') {
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
         return this.current;
     }
 };

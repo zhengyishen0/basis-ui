@@ -1,0 +1,32 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+  page?: number;
+  isActive?: boolean;
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  page,
+  isActive = false,
+  class: className,
+  ...alpineProps
+} = Astro.props;
+---
+
+<button
+  class={cn(
+    "inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md border transition-colors",
+    className
+  )}
+  x-bind:class={`{
+    'border-primary bg-primary text-primary-foreground': page?.current || ${isActive},
+    'border-input bg-background hover:bg-accent hover:text-accent-foreground': !(page?.current || ${isActive})
+  }`}
+  x-on:click={page ? `goToPage(${page})` : `goToPage(page.number)`}
+  {...alpineProps}
+>
+  <slot>{page}</slot>
+</button>

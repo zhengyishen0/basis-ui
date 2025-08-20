@@ -1,0 +1,24 @@
+---
+import BreadcrumbItem from './BreadcrumbItem.astro';
+
+export interface Props {
+    separator?: 'chevron' | 'slash' | 'dot' | 'arrow';
+    icon?: string;
+    class?: string;
+    [key: string]: any;
+}
+
+const { separator, icon, class: className, ...alpineProps } = Astro.props;
+
+// Extract x-for and x-key from alpineProps for dynamic rendering
+const { 'x-for': xFor, 'x-key': xKey, ...restProps } = alpineProps;
+
+// Component props to pass down to BreadcrumbItem
+const itemProps = { separator, icon, class: className };
+---
+
+<template x-for={xFor} x-key={xKey || 'item.id'}>
+    <BreadcrumbItem {...itemProps} {...restProps}>
+        <slot />
+    </BreadcrumbItem>
+</template>

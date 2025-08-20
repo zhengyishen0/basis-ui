@@ -1,0 +1,26 @@
+---
+import { cn } from '@/lib/utils';
+import { cva } from 'class-variance-authority';
+import { overflowVariants } from '@/lib/component-variants';
+
+const inlineVariants = cva(
+    'flex flex-row justify-start items-center max-w-full gap-2',
+    {
+        variants: {
+            overflow: overflowVariants,
+        },
+    }
+);
+
+export interface Props {
+    overflow?: 'auto' | 'fixed' | 'expand' | 'wrap' | 'show';
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const { overflow = 'wrap', class: className, ...alpineProps } = Astro.props;
+---
+
+<div class={cn(inlineVariants({ overflow }), className)} {...alpineProps}>
+    <slot />
+</div>

@@ -1,0 +1,298 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const sliderVariants = cva(
+  'relative flex w-full touch-none select-none items-center group',
+  {
+    variants: {
+      variant: {
+        primary: '',
+        secondary: '',
+        black: '',
+        white: '',
+      }
+    },
+    defaultVariants: {
+      variant: 'primary'
+    }
+  }
+);
+
+export interface Props extends VariantProps<typeof sliderVariants> {
+  className?: string;
+  min?: number;
+  max?: number;
+  value?: number;
+  buffered?: number;
+  step?: number;
+  disabled?: boolean;
+  name?: string;
+  id?: string;
+  thumb?: 'solid' | 'outline';
+  // Custom color props
+  trackColor?: string;
+  bufferColor?: string;
+  progressColor?: string;
+  [key: string]: any;
+}
+
+const {
+  variant = 'primary',
+  className,
+  min = 0,
+  max = 100,
+  value = 0,
+  buffered = 0,
+  step = 1,
+  disabled = false,
+  name,
+  id,
+  thumb = 'outline',
+  trackColor,
+  bufferColor,
+  progressColor,
+  ...alpineProps
+} = Astro.props;
+
+const sliderId = id || 'slider-' + Math.random().toString(36).substring(2, 11);
+const thumbSize = 12; // Fixed small size
+
+// Smart color defaults
+const getTrackColor = () => {
+  if (trackColor) return trackColor;
+  
+  // Primary uses theme colors (no opacity ratios)
+  if (variant === 'primary') return 'bg-secondary';
+  if (variant === 'secondary') return 'bg-muted';
+  
+  // Other variants use opacity ratios
+  if (variant === 'black') return 'bg-black/30';
+  if (variant === 'white') return 'bg-white/30';
+  
+  return 'bg-secondary'; // fallback
+};
+
+const getBufferColor = () => {
+  if (bufferColor) return bufferColor;
+  
+  // Primary uses theme colors (no opacity ratios)  
+  if (variant === 'primary') return 'bg-muted-foreground/30';
+  if (variant === 'secondary') return 'bg-secondary-foreground/30';
+  
+  // Other variants use opacity ratios
+  if (variant === 'black') return 'bg-black/50';
+  if (variant === 'white') return 'bg-white/50';
+  
+  return 'bg-muted-foreground/30'; // fallback
+};
+
+const getProgressColor = () => {
+  if (progressColor) return progressColor;
+  
+  // All variants use full color (no opacity) for progress
+  if (variant === 'primary') return 'bg-primary';
+  if (variant === 'secondary') return 'bg-secondary-foreground';
+  if (variant === 'black') return 'bg-black';
+  if (variant === 'white') return 'bg-white';
+  
+  return 'bg-primary'; // fallback
+};
+
+// Helper function for thumb colors
+const getThumbColors = () => {
+  const progressColorClass = getProgressColor();
+  const baseColor = progressColorClass.replace('bg-', '');
+  
+  if (thumb === 'outline') {
+    // Outline always uses progress color for border (enabled and disabled)
+    return {
+      enabled: `bg-background border-2 border-${baseColor}`,
+      disabled: `bg-background border-2 border-${baseColor}`
+    };
+  } else {
+    // Solid style
+    return {
+      enabled: `${progressColorClass} border-2 border-${baseColor}`,
+      disabled: `${progressColorClass} border-2 border-${baseColor}` // Solid disabled uses full progress color
+    };
+  }
+};
+---
+
+<div 
+  class={cn(sliderVariants({ variant }), className)}
+  x-data="{
+    min: 0,
+    max: 100,
+    step: 1,
+    disabled: false,
+    dragging: false,
+    hovered: false,
+    currentValue: 0,
+    bufferedValue: 0,
+    dragValue: 0,
+    thumbSize: 16,
+    
+    init() {
+      this.min = parseInt(this.$el.dataset.min) || 0;
+      this.max = parseInt(this.$el.dataset.max) || 100;
+      this.step = parseFloat(this.$el.dataset.step) || 1;
+      this.disabled = this.$el.dataset.disabled === 'true';
+      this.currentValue = parseFloat(this.$el.dataset.value) || 0;
+      this.bufferedValue = parseFloat(this.$el.dataset.buffered) || 0;
+      this.dragValue = this.currentValue;
+      this.thumbSize = parseInt(this.$el.dataset.thumbsize) || 16;
+    },
+    
+    handleMouseDown(e) {
+      if (this.disabled) return;
+      this.dragging = true;
+      const boundMouseMove = (e) => this.handleMouseMove(e);
+      const boundMouseUp = () => this.handleMouseUp();
+      document.addEventListener('mousemove', boundMouseMove);
+      document.addEventListener('mouseup', boundMouseUp);
+      this.boundMouseMove = boundMouseMove;
+      this.boundMouseUp = boundMouseUp;
+      e.preventDefault();
+      this.updateFromMouse(e);
+    },
+    
+    handleMouseMove(e) {
+      if (!this.dragging) return;
+      this.updateFromMouse(e);
+    },
+    
+    updateFromMouse(e) {
+      const rect = this.$refs.track.getBoundingClientRect();
+      const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      let newValue = pos * (this.max - this.min) + this.min;
+      if (this.step > 0) {
+        newValue = Math.round((newValue - this.min) / this.step) * this.step + this.min;
+      }
+      newValue = Math.max(this.min, Math.min(this.max, newValue));
+      this.dragValue = newValue;
+      this.$dispatch('slider-drag', { value: newValue, percentage: ((newValue - this.min) / (this.max - this.min)) * 100 });
+    },
+    
+    handleMouseUp() {
+      if (!this.dragging) return;
+      this.dragging = false;
+      this.currentValue = this.dragValue;
+      document.removeEventListener('mousemove', this.boundMouseMove);
+      document.removeEventListener('mouseup', this.boundMouseUp);
+      this.$dispatch('slider-change', { value: this.currentValue, percentage: ((this.currentValue - this.min) / (this.max - this.min)) * 100 });
+    },
+    
+    handleTrackClick(e) {
+      if (this.disabled || this.dragging) return;
+      this.updateFromMouse(e);
+      this.currentValue = this.dragValue;
+      this.$dispatch('slider-change', { value: this.currentValue, percentage: ((this.currentValue - this.min) / (this.max - this.min)) * 100 });
+    },
+    
+    getCurrentValue() {
+      return this.dragging ? this.dragValue : this.currentValue;
+    },
+    
+    getCurrentPercentage() {
+      const current = this.getCurrentValue();
+      return ((current - this.min) / (this.max - this.min)) * 100;
+    },
+    
+    getBufferedPercentage() {
+      return ((this.bufferedValue - this.min) / (this.max - this.min)) * 100;
+    },
+    
+    getThumbOffset() {
+      const percentage = this.getCurrentPercentage();
+      return 'calc(' + percentage + '% - ' + (this.thumbSize / 2) + 'px)';
+    }
+  }"
+  data-min={min}
+  data-max={max}
+  data-step={step}
+  data-disabled={disabled}
+  data-value={value}
+  data-buffered={buffered}
+  data-thumbsize={thumbSize}
+  x-on:mouseenter="hovered = true"
+  x-on:mouseleave="hovered = false"
+  {...alpineProps}
+>
+  <!-- Track Container -->
+  <div 
+    x-ref="track"
+    class={cn(
+      'relative w-full grow overflow-hidden rounded-full cursor-pointer transition-all duration-200',
+      'h-1', // Fixed small size
+      getTrackColor(),
+      'group-hover:bg-opacity-80',
+      disabled && 'opacity-50 cursor-not-allowed'
+    )}
+    x-on:click="handleTrackClick($event)"
+  >
+    <!-- Buffered Progress Layer -->
+    <div 
+      x-show="bufferedValue > min"
+      class={cn(
+        'absolute h-full rounded-full transition-all duration-200',
+        getBufferColor()
+      )}
+      x-bind:style="'width: ' + Math.min(getBufferedPercentage(), 100) + '%'"
+    ></div>
+    
+    <!-- Current Progress -->
+    <div 
+      class={cn(
+        'absolute h-full rounded-full',
+        getProgressColor()
+      )}
+      x-bind:style="'width: ' + Math.min(getCurrentPercentage(), 100) + '%'"
+      x-bind:class="dragging ? 'transition-none' : 'transition-all duration-200'"
+    ></div>
+  </div>
+
+  <!-- Hidden Native Input -->
+  <input
+    type="range"
+    name={name}
+    id={sliderId}
+    min={min}
+    max={max}
+    step={step}
+    value={value}
+    disabled={disabled}
+    class="sr-only"
+    tabindex="-1"
+    aria-hidden="true"
+  />
+
+  <!-- Custom Thumb -->
+  <div 
+    class={cn(
+      'absolute top-1/2 -translate-y-1/2 rounded-full cursor-grab transition-all duration-200 z-10 shadow-sm',
+      'w-3 h-3', // Fixed small size
+      // Dynamic thumb colors based on variant and state
+      !disabled && getThumbColors().enabled,
+      disabled && getThumbColors().disabled,
+      'hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+      disabled ? 'cursor-not-allowed' : 'hover:shadow-md active:scale-95',
+      !disabled && 'group-hover:scale-110'
+    )}
+    x-bind:class="{
+      'cursor-grabbing scale-110 shadow-lg': dragging,
+      'cursor-grab': !dragging && !disabled,
+      'transition-none': dragging,
+      'transition-all duration-200': !dragging
+    }"
+    x-bind:style="'left: ' + getThumbOffset()"
+    x-on:mousedown="handleMouseDown($event)"
+    tabindex={disabled ? -1 : 0}
+    role="slider"
+    x-bind:aria-valuenow="getCurrentValue()"
+    x-bind:aria-valuemin="min"
+    x-bind:aria-valuemax="max"
+    x-bind:aria-disabled="disabled"
+  ></div>
+</div>

@@ -1,0 +1,29 @@
+---
+import MenuItem from '../../overlay/menu/MenuItem.astro';
+
+export interface Props {
+    value?: string;
+    label?: string;
+    disabled?: boolean;
+    class?: string;
+    [key: string]: any;
+}
+
+const {
+    value,
+    label,
+    disabled = false,
+    class: className,
+    ...alpineProps
+} = Astro.props;
+---
+
+<MenuItem
+    x-on:click={`selectedValue = '${value}'; selectedLabel = '${label || value}'; close()`}
+    :class={`selectedValue === '${value}' ? 'bg-accent text-accent-foreground' : ''`}
+    disabled={disabled}
+    class={className}
+    {...alpineProps}
+>
+    <slot>{label || value}</slot>
+</MenuItem>

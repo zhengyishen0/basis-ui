@@ -1,0 +1,39 @@
+---
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const triggerVariants = cva(
+    'inline-block cursor-pointer',
+    {
+        variants: {
+            variant: {
+                default: '',
+                button: 'rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent',
+                ghost: 'hover:bg-accent hover:text-accent-foreground',
+                link: 'text-primary underline-offset-4 hover:underline',
+            },
+        },
+        defaultVariants: { variant: 'default' },
+    }
+);
+
+export interface Props extends VariantProps<typeof triggerVariants> {
+    className?: string;
+    [key: string]: any;
+}
+
+const { variant = 'default', className, ...alpineProps } = Astro.props;
+---
+
+<div
+    @click="trigger === 'click' && toggle()"
+    @contextmenu.prevent="trigger === 'rightclick' && toggle()"
+    @focus="trigger === 'focus' && (open = true)"
+    @blur="trigger === 'focus' && (open = false)"
+    :aria-expanded="open"
+    :aria-controls="popupId"
+    class={cn(triggerVariants({ variant }), className)}
+    {...alpineProps}
+>
+    <slot />
+</div>

@@ -1,0 +1,55 @@
+---
+import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { overflowVariants } from '@/lib/component-variants';
+
+const accordionVariants = cva('relative w-full', {
+    variants: {
+        maxWidth: {
+            sm: 'max-w-sm',
+            md: 'max-w-md',
+            lg: 'max-w-lg',
+            xl: 'max-w-xl',
+            full: 'max-w-full',
+        },
+        centered: {
+            true: 'mx-auto',
+            false: '',
+        },
+        overflow: overflowVariants
+    }
+});
+
+export interface Props extends VariantProps<typeof accordionVariants> {
+    maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+    centered?: boolean;
+    class?: string;
+    [key: string]: any; // Alpine.js pass-through
+}
+
+const {
+    maxWidth = 'md',
+    centered = true,
+    overflow = 'fixed',
+    class: className,
+    ...alpineProps
+} = Astro.props;
+
+const defaultXData = `{
+  activeAccordion: '',
+  setActiveAccordion(id) { 
+    this.activeAccordion = (this.activeAccordion == id) ? '' : id;
+  }
+}`;
+---
+
+<div
+    x-data={defaultXData}
+    {...alpineProps}
+    class={cn(
+        accordionVariants({ maxWidth, centered, overflow }),
+        className
+    )}
+>
+    <slot />
+</div>

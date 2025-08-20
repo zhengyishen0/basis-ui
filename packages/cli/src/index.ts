@@ -21,8 +21,8 @@ program
 
 program
   .command('add')
-  .description('Add components to your project')
-  .argument('[components...]', 'Components to add')
+  .description('Add the complete UI component library to your project')
+  .argument('[target]', 'Target to add (only "ui" is supported)', 'ui')
   .option('-y, --yes', 'Skip confirmation prompts')
   .option('-o, --overwrite', 'Overwrite existing files')
   .option('-c, --cwd <cwd>', 'Current working directory', process.cwd())

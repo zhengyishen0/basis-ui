@@ -1,0 +1,17 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface Props {
+  class?: string;
+  [key: string]: any;
+}
+
+const { class: className, ...alpineProps } = Astro.props;
+---
+
+<tbody 
+  class={cn("divide-y divide-border", className)}
+  {...alpineProps}
+>
+  <slot />
+</tbody>

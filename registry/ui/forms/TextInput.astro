@@ -1,0 +1,88 @@
+---
+import { cva } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const textInputVariants = cva(
+  "w-full px-3 py-2 text-sm rounded-md border border-input bg-background transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-accent/5 focus:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+);
+
+export interface Props {
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search';
+  disabled?: boolean;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  placeholder?: string;
+  value?: string;
+  name?: string;
+  id?: string;
+  className?: string;
+  // Alpine.js pass-through
+  [key: string]: any;
+}
+
+const { 
+  type = 'text',
+  disabled = false,
+  required = false,
+  minLength,
+  maxLength,
+  pattern,
+  placeholder,
+  value,
+  name,
+  id,
+  className,
+  ...alpineProps
+} = Astro.props;
+
+// HTML5 validation patterns
+const defaultPatterns = {
+  email: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$",
+  tel: "[0-9\\s\\-\\(\\)\\+]{10,}",
+  url: "https?://.+"
+};
+
+const validationPattern = pattern || (type && defaultPatterns[type as keyof typeof defaultPatterns]);
+
+// Phone formatting for tel inputs
+const telFormatting = type === 'tel' ? {
+  'x-data': "{ formatPhone(e) { let value = e.target.value.replace(/[^0-9]/g, ''); if (value.length >= 6) { e.target.value = '(' + value.slice(0,3) + ') ' + value.slice(3,6) + '-' + value.slice(6,10); } else if (value.length >= 3) { e.target.value = '(' + value.slice(0,3) + ') ' + value.slice(3); } else { e.target.value = value; } } }",
+  'x-on:input': 'formatPhone($event)'
+} : {};
+
+// Merge tel formatting with alpine props
+const finalProps = { ...alpineProps, ...telFormatting };
+---
+
+<!-- 
+Pine UI TextInput Component
+
+Usage:
+<TextInput type="email" placeholder="Enter your email" required />
+<TextInput type="tel" placeholder="(555) 123-4567" />
+<TextInput disabled />
+
+Features:
+- HTML5 validation with built-in patterns
+- Auto phone formatting for type="tel"
+- Multiple input types with validation
+- Alpine.js pass-through props
+- Single default styling
+-->
+
+<input 
+  type={type}
+  id={id}
+  name={name}
+  placeholder={placeholder}
+  value={value}
+  disabled={disabled}
+  required={required}
+  minlength={minLength}
+  maxlength={maxLength}
+  pattern={validationPattern}
+  class={cn(textInputVariants(), className)}
+  {...finalProps}
+/>
