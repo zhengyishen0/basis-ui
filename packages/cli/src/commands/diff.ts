@@ -48,45 +48,21 @@ export async function diff(component: string | undefined, options: DiffOptions) 
       process.exit(1);
     }
 
-    // Get local components
-    const localComponents = await getLocalComponents(componentsPath);
+    // Since we now have a single UI library approach, just check if local UI exists
+    if (!fs.existsSync(componentsPath)) {
+      console.log(chalk.yellow('⚠ UI components are not installed locally.'));
+      console.log(chalk.blue('Run: npx basisui add ui'));
+      return;
+    }
+
+    // For the simplified approach, we'll check if the registry has been updated
+    const hasRemoteUpdates = await checkForRemoteUpdates(componentsPath);
     
-    if (component) {
-      // Check specific component
-      if (!registry.components[component]) {
-        console.error(chalk.red(`❌ Component "${component}" not found in registry.`));
-        process.exit(1);
-      }
-
-      if (!localComponents.includes(component)) {
-        console.log(chalk.yellow(`⚠ Component "${component}" is not installed locally.`));
-        console.log(chalk.blue(`Run: npx basisui add ${component}`));
-        return;
-      }
-
-      await checkComponentDiff(component, registry.components[component], componentsPath);
+    if (!hasRemoteUpdates) {
+      console.log(chalk.green('✅ UI components are up to date!'));
     } else {
-      // Check all local components
-      const updates: string[] = [];
-      
-      for (const componentName of localComponents) {
-        if (registry.components[componentName]) {
-          const hasUpdates = await checkComponentDiff(componentName, registry.components[componentName], componentsPath, true);
-          if (hasUpdates) {
-            updates.push(componentName);
-          }
-        }
-      }
-
-      if (updates.length === 0) {
-        console.log(chalk.green('✅ All components are up to date!'));
-      } else {
-        console.log(chalk.blue('📦 Components with available updates:'));
-        updates.forEach(name => {
-          console.log(`  ${chalk.yellow('↻')} ${name}`);
-        });
-        console.log(chalk.gray(`\nRun ${chalk.blue('npx basisui add <component>')} to update.`));
-      }
+      console.log(chalk.blue('📦 UI library updates are available'));
+      console.log(chalk.gray(`Run ${chalk.blue('npx basisui add ui --overwrite')} to update.`));
     }
 
   } catch (error) {
@@ -180,6 +156,29 @@ async function checkComponentDiff(
   }
 
   return hasUpdates;
+}
+
+async function checkForRemoteUpdates(componentsPath: string): Promise<boolean> {
+  try {
+    // Simple check: compare the registry lastUpdated timestamp with local install time
+    const response = await fetch(REGISTRY_URL);
+    if (!response.ok) {
+      return false;
+    }
+    
+    const registry = await response.json();
+    const registryUpdated = new Date(registry.meta?.lastUpdated || 0);
+    
+    // Check when the local UI folder was last modified
+    const stats = await fs.stat(componentsPath);
+    const localUpdated = stats.mtime;
+    
+    // If registry is newer than local installation, there might be updates
+    return registryUpdated > localUpdated;
+  } catch (error) {
+    // If we can't check, assume no updates to avoid false positives
+    return false;
+  }
 }
 
 function normalizeContent(content: string): string {
