@@ -388,6 +388,7 @@ async function setupAstroIntegrations(cwd: string) {
   const astroPackages = [
     "@astrojs/tailwind@^5.1.0",
     "@astrojs/alpinejs@^0.4.0",
+    "astro-icon@^1.1.5",
     "astro@^4.15.0" // Ensure we have a recent version
   ];
 
@@ -421,9 +422,8 @@ async function setupIcons(cwd: string) {
   const packageJsonPath = path.join(cwd, "package.json");
   const packageJson = await fs.readJson(packageJsonPath);
 
-  // Icon packages for the UI components
+  // Icon packages for the UI components (astro-icon already installed in setupAstroIntegrations)
   const iconPackages = [
-    "astro-icon@^1.1.5",
     "@iconify-json/lucide@^1.2.62",
     "@iconify/tools@^4.0.0"
   ];
